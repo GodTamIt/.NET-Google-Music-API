@@ -267,7 +267,8 @@ namespace GoogleMusicAPI
             if (address == null)
                 throw new ArgumentNullException("'address' cannot be null.");
 
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(address);
+            HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(address);
+            request.Pipelined = false;
             request.AllowAutoRedirect = false;
 
 #if !NETFX_CORE
