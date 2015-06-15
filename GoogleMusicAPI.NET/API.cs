@@ -12,15 +12,7 @@ using GoogleMusic.Clients;
 
 namespace GoogleMusic
 {
-    /// <summary>
-    /// The delegate type invoked when an asynchronous GoogleMusic function makes progress.
-    /// </summary>
-    /// <param name="progress">The new progress to report, in range 0.0 to 1.0.</param>
-    public delegate void TaskProgressEventHandler(double progress);
-    /// <summary>
-    /// The delegate type invoked when an asynchronous GoogleMusic function finishes a task.
-    /// </summary>
-    public delegate void TaskCompleteEventHandler();
+
 
     /// <summary>
     /// A class that wraps the functionality of individual Google Music clients to provide a robust, full implementation of the Google Music API.
