@@ -14,7 +14,7 @@ namespace GoogleMusic.Clients
     {
 
         #region Members
-        private static const string USER_AGENT = "Music Manager (1, 0, 55, 7425 HTTPS - Windows)";
+        private const string USER_AGENT = "Music Manager (1, 0, 55, 7425 HTTPS - Windows)";
 
         private string _ClientId;
         private string _ClientSecret;
@@ -31,7 +31,7 @@ namespace GoogleMusic.Clients
         /// Initializes a new instance of a MusicManagerClient.
         /// </summary>
         /// <param name="clientId">Required. The client ID of the program accessing the MusicManager API.</param>
-        /// <param name="clientSecret">Required. The secret string of the client given by Google.</param>
+        /// <param name="clientSecret">Required. The secret string of the program given by Google.</param>
         /// <exception cref="System.ArgumentException">Thrown when clientId is an empty string or null.</exception>
         public MusicManagerClient(string clientId, string clientSecret)
         {
@@ -64,8 +64,9 @@ namespace GoogleMusic.Clients
         }
 
         /// <summary>
-        /// The secret string of the client given by Google.
+        /// The secret string of the program given by Google.
         /// </summary>
+        /// <exception cref="System.ArgumentException">Thrown when property is set to empty string or null.</exception>
         public string ClientSecret
         {
             get { return _ClientSecret; }
