@@ -22,6 +22,9 @@ namespace GoogleMusic
     /// </summary>
     public delegate void TaskCompleteEventHandler();
 
+    /// <summary>
+    /// A class that wraps the functionality of individual Google Music clients to provide a robust, full implementation of the Google Music API.
+    /// </summary>
     public class API
     {
         #region Members
@@ -157,7 +160,7 @@ namespace GoogleMusic
         public void Logout()
         {
             _WebClient.Logout();
-            _MusicManager.Deauthorize();
+            _MusicManager.Logout();
         }
 
         #endregion

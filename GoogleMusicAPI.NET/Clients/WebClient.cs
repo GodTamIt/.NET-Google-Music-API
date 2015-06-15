@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GoogleMusic.Net;
 
 namespace GoogleMusic.Clients
 {
-    public class WebClient
+    public class WebClient : IClient
     {
 
         #region Members

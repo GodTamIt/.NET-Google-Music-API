@@ -8,9 +8,11 @@ using System.Net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using GoogleMusic.Net;
+
 namespace GoogleMusic.Clients
 {
-    public class MusicManagerClient
+    public class MusicManagerClient : IClient
     {
 
         #region Members
@@ -46,6 +48,11 @@ namespace GoogleMusic.Clients
         #endregion
 
         #region Properties
+
+        public bool IsLoggedIn
+        {
+            get { return !(String.IsNullOrEmpty(_AccessToken) || String.IsNullOrEmpty(_RefreshToken) || String.IsNullOrEmpty(_AuthorizationCode)); }
+        }
 
         /// <summary>
         /// The emulated ID of the program accessing the MusicManager API.
@@ -106,7 +113,7 @@ namespace GoogleMusic.Clients
 
         #endregion
 
-        #region Authorization/Deauthorization
+        #region Login
 
         /// <summary>
         /// Gets the URL the user must visit to retrieve the ClientSecret.
@@ -126,30 +133,46 @@ namespace GoogleMusic.Clients
         /// </summary>
         /// <param name="authorizationCode">Required. The authorization code retrieved by the user to authorize access from the MusicManagerClient.</param>
         /// <returns>Returns the result from Google's servers.</returns>
-        public string GetRefreshToken(string authorizationCode)
+        public Result<string> GetRefreshToken(string authorizationCode)
         {
             _AuthorizationCode = authorizationCode;
 
-            Dictionary<String, String> fieldsOA = new Dictionary<String, String>
+            Form form;
+
+            using (FormBuilder builderOA = new FormBuilder())
             {
-                {"code", authorizationCode},
-                {"client_id",  ClientId},
-                {"client_secret", ClientSecret},
-                {"redirect_uri", "urn:ietf:wg:oauth:2.0:oob"},
-                {"grant_type", "authorization_code"},
-            };
+                builderOA.AddField("code", ClientId);
+                builderOA.AddField("client_secret", ClientSecret);
+                builderOA.AddField("redirect_uri", "urn:ietf:wg:oauth:2.0:oob");
+                builderOA.AddField("grant_type", "authorization_code");
 
-            FormBuilder builderOA = new FormBuilder();
-            builderOA.AddFields(fieldsOA);
-            builderOA.Close();
+                form = builderOA.ToForm();
+            }
 
-            byte[] response = http.GetContent(http.UploadDataSync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), builderOA.ContentType, builderOA.GetBytes()));
+            try
+            {
+                byte[] response = http.GetContent(http.UploadDataSync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form.ContentType, form.Bytes));
 
-            // Bytes -> String -> JSON
-            Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Encoding.UTF8.GetString(response));
 
-            _RefreshToken = json["refresh_token"];
-            return _RefreshToken;
+                // Bytes -> String -> JSON
+                Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Encoding.UTF8.GetString(response));
+
+                _RefreshToken = json["refresh_token"];
+                return new Result<string>(true, _RefreshToken, this);
+            }
+            catch (WebException e)
+            {
+                return new Result<string>(false, String.Empty, this, e.ToString("A network error occurred while attempting to retrieve an OAuth refresh token."), e);
+            }
+            catch (JsonException e)
+            {
+                return new Result<string>(false, String.Empty, this, e.ToString("An error occurred trying to parse the OAuth refresh token response."), e);
+            }
+            catch (Exception e)
+            {
+                return new Result<string>(false, String.Empty, this, e.ToString("An unknown error occurred."), e);
+            }
+            
         }
 
         /// <summary>
@@ -157,96 +180,141 @@ namespace GoogleMusic.Clients
         /// </summary>
         /// <param name="authorizationCode">Required. The authorization code retrieved by the user to authorize access from the MusicManagerClient.</param>
         /// <returns>Returns a task the result from Google's servers.</returns>
-        public async Task<string> GetRefreshTokenAsync(string authorizationCode)
+        public async Task<Result<string>> GetRefreshTokenAsync(string authorizationCode)
         {
             _AuthorizationCode = authorizationCode;
 
-            Dictionary<String, String> fieldsOA = new Dictionary<String, String>
+            Form form;
+
+            using (FormBuilder builderOA = new FormBuilder())
             {
-                {"code", authorizationCode},
-                {"client_id",  ClientId},
-                {"client_secret", ClientSecret},
-                {"redirect_uri", "urn:ietf:wg:oauth:2.0:oob"},
-                {"grant_type", "authorization_code"},
-            };
+                builderOA.AddField("code", ClientId);
+                builderOA.AddField("client_secret", ClientSecret);
+                builderOA.AddField("redirect_uri", "urn:ietf:wg:oauth:2.0:oob");
+                builderOA.AddField("grant_type", "authorization_code");
 
-            FormBuilder builderOA = new FormBuilder();
-            builderOA.AddFields(fieldsOA);
-            builderOA.Close();
+                form = await builderOA.ToFormAsync();
+            }
             
-            byte[] response = await http.GetContentAsync(await http.UploadDataAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), builderOA.ContentType, builderOA.GetBytes()));
+            try
+            {
+                byte[] response = await http.GetContentAsync(await http.UploadDataAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form.ContentType, form.Bytes));
 
-            // Bytes -> String -> JSON
-            Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Encoding.UTF8.GetString(response));
+                // Bytes -> String -> JSON
+                Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Encoding.UTF8.GetString(response));
 
-            _RefreshToken = json["refresh_token"];
-            return _RefreshToken;
+                _RefreshToken = json["refresh_token"];
+                return new Result<string>(true, _RefreshToken, this);
+            }
+            catch (WebException e)
+            {
+                return new Result<string>(false, String.Empty, this, e.ToString("A network error occurred while attempting to retrieve an OAuth refresh token."), e);
+            }
+            catch (JsonException e)
+            {
+                return new Result<string>(false, String.Empty, this, e.ToString("An error occurred trying to parse the OAuth refresh token response."), e);
+            }
+            catch (Exception e)
+            {
+                return new Result<string>(false, String.Empty, this, e.ToString("An unknown error occurred."), e);
+            }
         }
 
         /// <summary>
         /// Renews the access token with the refresh token.
         /// </summary>
         /// <returns>Returns the new access token.</returns>
-        public string RenewAccessToken()
+        public Result<string> RenewAccessToken()
         {
             if (String.IsNullOrEmpty(RefreshToken))
-                throw new InvalidOperationException("The refresh token cannot be null or empty. The refresh token must be retrieved successfully before calling this function.");
+                return new Result<string>(false, String.Empty, this, "OAuth: The refresh token cannot be null or empty when retrieving the access token.");
 
-            Dictionary<String, String> fieldsOA = new Dictionary<String, String>
+            Form form;
+
+            using (FormBuilder builderOA = new FormBuilder())
             {
-                {"refresh_token", RefreshToken},
-                {"client_id",  ClientId},
-                {"client_secret", ClientSecret},
-                {"grant_type", "refresh_token"},
-            };
+                builderOA.AddField("refresh_token", RefreshToken);
+                builderOA.AddField("client_id", ClientId);
+                builderOA.AddField("client_secret", ClientSecret);
+                builderOA.AddField("grant_type", "refresh_token");
 
-            FormBuilder builderOA = new FormBuilder();
-            builderOA.AddFields(fieldsOA);
-            builderOA.Close();
+                form = builderOA.ToForm();
+            }
 
-            byte[] response = http.GetContent(http.UploadDataSync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), builderOA.ContentType, builderOA.GetBytes()));
+            
+            try
+            {
+                byte[] response = http.GetContent(http.UploadDataSync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form.ContentType, form.Bytes));
 
-            // Bytes -> String -> JSON
-            Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Encoding.UTF8.GetString(response));
+                // Bytes -> String -> JSON
+                Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Encoding.UTF8.GetString(response));
 
-            _AccessToken = json["access_token"];
-            return _AccessToken;
+                _AccessToken = json["access_token"];
+                return new Result<string>(true, _AccessToken, this);
+            }
+            catch (WebException e)
+            {
+                return new Result<string>(false, String.Empty, this, e.ToString("A network error occurred while attempting to retrieve an OAuth access token."), e);
+            }
+            catch (JsonException e)
+            {
+                return new Result<string>(false, String.Empty, this, e.ToString("An error occurred trying to parse the OAuth access token response."), e);
+            }
+            catch (Exception e)
+            {
+                return new Result<string>(false, String.Empty, this, e.ToString("An unknown error occurred."), e);
+            }
         }
 
         /// <summary>
         /// Asynchronously renews the access token with the refresh token.
         /// </summary>
         /// <returns>Returns the new access token.</returns>
-        public async Task<string> RenewAccessTokenAsync()
+        public async Task<Result<string>> RenewAccessTokenAsync()
         {
             if (String.IsNullOrEmpty(RefreshToken))
-                throw new InvalidOperationException("The refresh token cannot be null or empty. The refresh token must be retrieved successfully before calling this function.");
+                return new Result<string>(false, String.Empty, this, "OAuth: The refresh token cannot be null or empty when retrieving the access token.");
 
-            Dictionary<String, String> fieldsOA = new Dictionary<String, String>
+            Form form;
+
+            using (FormBuilder builderOA = new FormBuilder())
             {
-                {"refresh_token", RefreshToken},
-                {"client_id",  ClientId},
-                {"client_secret", ClientSecret},
-                {"grant_type", "refresh_token"},
-            };
+                builderOA.AddField("refresh_token", RefreshToken);
+                builderOA.AddField("client_id", ClientId);
+                builderOA.AddField("client_secret", ClientSecret);
+                builderOA.AddField("grant_type", "refresh_token");
 
-            FormBuilder builderOA = new FormBuilder();
-            builderOA.AddFields(fieldsOA);
-            builderOA.Close();
+                form = await builderOA.ToFormAsync();
+            }
 
-            byte[] response = await http.GetContentAsync(await http.UploadDataAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), builderOA.ContentType, builderOA.GetBytes()));
+            try
+            {
+                byte[] response = await http.GetContentAsync(await http.UploadDataAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form.ContentType, form.Bytes));
 
-            // Bytes -> String -> JSON
-            Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Encoding.UTF8.GetString(response));
+                // Bytes -> String -> JSON
+                Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Encoding.UTF8.GetString(response));
 
-            _AccessToken = json["access_token"];
-            return _AccessToken;
+                _AccessToken = json["access_token"];
+                return new Result<string>(true, _AccessToken, this);
+            }
+            catch (WebException e)
+            {
+                return new Result<string>(false, String.Empty, this, e.ToString("A network error occurred while attempting to retrieve an OAuth access token."), e);
+            }
+            catch (JsonException e)
+            {
+                return new Result<string>(false, String.Empty, this, e.ToString("An error occurred trying to parse the OAuth access token response."), e);
+            }
+            catch (Exception e)
+            {
+                return new Result<string>(false, String.Empty, this, e.ToString("An unknown error occurred."), e);
+            }
         }
 
         /// <summary>
         /// Deauthorizes the client from accessing an account.
         /// </summary>
-        public void Deauthorize()
+        public void Logout()
         {
             _AuthorizationCode = String.Empty;
             _RefreshToken = String.Empty;
@@ -259,11 +327,11 @@ namespace GoogleMusic.Clients
 
         private HttpWebRequest SetupWebRequest(string address)
         {
-            HttpWebRequest request = http.SetupRequest(address);
+            HttpWebRequest request = http.CreateRequest(address);
 
             if (_AccessToken != null)
                 request.Headers[HttpRequestHeader.Authorization] = "Bearer " + _AccessToken;
-
+            
             return request;
         }
 

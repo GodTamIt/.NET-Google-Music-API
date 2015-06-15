@@ -56,10 +56,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="API.cs" />
+    <Compile Include="Clients\IClient.cs" />
     <Compile Include="Clients\MusicManagerClient.cs" />
-    <Compile Include="Web\FormBuilder.cs" />
+    <Compile Include="Result.cs" />
+    <Compile Include="ExceptionWriter.cs" />
+    <Compile Include="Net\FormBuilder.cs" />
     <Compile Include="Clients\WebClient.cs" />
-    <Compile Include="Web\Http.cs" />
+    <Compile Include="Net\Http.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
