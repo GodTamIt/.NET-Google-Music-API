@@ -1,0 +1,83 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace GoogleMusic
+{
+    public class Result<T>
+    {
+        #region Members
+        private bool _Success;
+        private T _ResultValue;
+        private Clients.IClient _Client;
+        private string _ErrorMessage;
+        private Exception _InnerException;
+        #endregion
+
+        #region Constructor
+        /// <summary>
+        /// Initializes a new instance of Result that represents the outcome of an operation.
+        /// </summary>
+        /// <param name="success">Required. The boolean value representing the operation's success.</param>
+        /// <param name="resultValue">Required. The value returned by the operation.</param>
+        /// <param name="client">Required. The parent client of the operation executed.</param>
+        /// <param name="errorMessage">Optional. A human-readable error message describing a failure. Value should be null if operation was successful.</param>
+        /// <param name="innerException">Optional. The underlying exception thrown by the program on a failure. Value should be null if operation was successful.</param>
+        internal Result(bool success, T resultValue, Clients.IClient client, string errorMessage = null, Exception innerException = null)
+        {
+            _Success = success;
+            _ResultValue = resultValue;
+            _Client = client;
+            _ErrorMessage = errorMessage;
+            _InnerException = innerException;
+        }
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the boolean value representing the operation's success.
+        /// </summary>
+        public bool Success
+        {
+            get { return _Success; }
+        }
+
+        /// <summary>
+        /// Gets the value returned by the operation.
+        /// </summary>
+        public T ResultValue
+        {
+            get { return _ResultValue; }
+            set { _ResultValue = value; }
+        }
+
+        /// <summary>
+        /// The parent client of the operation executed.
+        /// </summary>
+        public Clients.IClient Client
+        {
+            get { return _Client; }
+        }
+
+        /// <summary>
+        /// A human-readable error message describing a failure. Value is null if operation was successful.
+        /// </summary>
+        public string ErrorMessage
+        {
+            get { return _ErrorMessage; }
+        }
+
+        /// <summary>
+        /// The underlying exception thrown by the program on a failure. Value is null if operation was successful.
+        /// </summary>
+        public Exception InnerException
+        {
+            get { return _InnerException; }
+        }
+
+        #endregion
+    }
+}
