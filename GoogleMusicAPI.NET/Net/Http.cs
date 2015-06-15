@@ -16,14 +16,14 @@ using System.Web;
 using System.Collections;
 using System.Threading.Tasks;
 
-namespace GoogleMusic
+namespace GoogleMusic.Net
 {
     internal class Http
     {
         #region Members
         private DecompressionMethods _DecompressionMethod = DecompressionMethods.GZip;
         private int _Timeout = 10000;
-        private string _UserAgent = String.Empty;
+        private string _UserAgent = "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.124 Safari/537.36";
         private string _LastUrl = "http://www.google.com/";
         private bool _UseProxy = false;
         private WebProxy _Proxy;
@@ -138,6 +138,57 @@ namespace GoogleMusic
 
         #endregion
 
+        #region Non-Request Functions
+
+        public static string UrlEncode(string encode, string encoding)
+        {
+            return HttpUtility.UrlEncode(encode, Encoding.GetEncoding(encoding));
+        }
+
+        public HttpWebRequest CreateRequest(string url, string method = "GET", string referer = "", string accept = "*/*")
+        {
+            HttpWebRequest request;
+
+            request = (HttpWebRequest)HttpWebRequest.Create(url);
+            request.Proxy = (_UseProxy ? _Proxy : null);
+            request.AutomaticDecompression = _DecompressionMethod;
+
+            request.CachePolicy = new HttpRequestCachePolicy(_CachingPolicy);
+            request.Accept = accept;
+            request.Referer = referer;
+            request.CookieContainer = _Cookies;
+            request.UserAgent = _UserAgent;
+            request.Pipelined = (_UsePipelining && method != "POST" && method != "PUT");
+
+            return request;
+        }
+
+        public byte[] GetContent(HttpWebResponse response)
+        {
+            using (Stream responseStream = response.GetResponseStream())
+            {
+                using (MemoryStream memory = new MemoryStream())
+                {
+                    responseStream.CopyTo(memory, _BufferSize);
+                    return memory.ToArray();
+                }
+            }
+        }
+
+        public async Task<byte[]> GetContentAsync(HttpWebResponse response)
+        {
+            using (Stream responseStream = response.GetResponseStream())
+            {
+                using (MemoryStream memory = new MemoryStream())
+                {
+                    await responseStream.CopyToAsync(memory, _BufferSize);
+                    return memory.ToArray();
+                }
+            }
+        }
+
+        #endregion
+
         #region Upload
 
         public HttpWebResponse UploadDataSync(HttpWebRequest request, string contentType, byte[] data)
@@ -220,57 +271,6 @@ namespace GoogleMusic
             }
 
             return result;
-        }
-
-        #endregion
-
-        #region Helper
-
-        public static string UrlEncode(string encode, string encoding)
-        {
-            return HttpUtility.UrlEncode(encode, Encoding.GetEncoding(encoding));
-        }
-
-        public HttpWebRequest SetupRequest(string url, string method = "GET", string referer = "", string accept = "*/*")
-        {
-            HttpWebRequest request;
-
-            request = (HttpWebRequest)HttpWebRequest.Create(url);
-            request.Proxy = (_UseProxy ? _Proxy : null);
-            request.AutomaticDecompression = _DecompressionMethod;
-
-            request.CachePolicy = new HttpRequestCachePolicy(_CachingPolicy);
-            request.Accept = accept;
-            request.Referer = referer;
-            request.CookieContainer = _Cookies;
-            request.UserAgent = _UserAgent;
-            request.Pipelined = (_UsePipelining && method != "POST" && method != "PUT");
-
-            return request;
-        }
-
-        public byte[] GetContent(HttpWebResponse response)
-        {
-            using (Stream responseStream = response.GetResponseStream())
-            {
-                using (MemoryStream memory = new MemoryStream())
-                {
-                    responseStream.CopyTo(memory, _BufferSize);
-                    return memory.ToArray();
-                }
-            }
-        }
-
-        public async Task<byte[]> GetContentAsync(HttpWebResponse response)
-        {
-            using (Stream responseStream = response.GetResponseStream())
-            {
-                using (MemoryStream memory = new MemoryStream())
-                {
-                    await responseStream.CopyToAsync(memory, _BufferSize);
-                    return memory.ToArray();
-                }
-            }
         }
 
         #endregion
