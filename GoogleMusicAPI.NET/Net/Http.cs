@@ -341,11 +341,6 @@ namespace GoogleMusic.Net
 
         #region Pre-Request
 
-        public static string UrlEncode(string encode, string encoding)
-        {
-            return HttpUtility.UrlEncode(encode, Encoding.GetEncoding(encoding));
-        }
-
         public HttpWebRequest CreateRequest(string url, string method = "GET", string referer = "", string accept = "*/*")
         {
             HttpWebRequest request;

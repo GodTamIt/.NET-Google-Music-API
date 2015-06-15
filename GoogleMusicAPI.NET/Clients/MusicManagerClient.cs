@@ -121,8 +121,8 @@ namespace GoogleMusic.Clients
         /// <returns>Returns the URL calculated.</returns>
         public string GetAuthorizationCodeUrl()
         {
-            string encodedClientId = Http.UrlEncode(_ClientId, "ISO-8859-1");
-            string encodedScope = Http.UrlEncode("https://www.googleapis.com/auth/musicmanager", "ISO-8859-1");
+            string encodedClientId = System.Web.HttpUtility.UrlEncode(_ClientId, Encoding.GetEncoding("ISO-8859-1"));
+            string encodedScope = System.Web.HttpUtility.UrlEncode("https://www.googleapis.com/auth/musicmanager", Encoding.GetEncoding("ISO-8859-1"));
 
             return String.Format("https://accounts.google.com/o/oauth2/auth?response_type=code&client_id={0}&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope={1}",
                 encodedClientId, encodedScope);
