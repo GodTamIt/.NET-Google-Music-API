@@ -138,7 +138,208 @@ namespace GoogleMusic.Net
 
         #endregion
 
-        #region Non-Request Functions
+        #region Cookies
+
+        /// <summary>
+        /// Deletes all cookies and logins.
+        /// </summary>
+        public void ClearCookies()
+        {
+            _Cookies = new CookieContainer();
+        }
+
+
+        /// <summary>
+        /// Deletes all cookies associated with a specified URL.
+        /// </summary>
+        /// <param name="URL">Required. The specified URL's cookies to clear.</param>
+        public void ClearCookies(string URL)
+        {
+            try
+            {
+                CookieCollection CC = _Cookies.GetCookies(new Uri(URL));
+                foreach (Cookie Cookie in CC)
+                {
+                    Cookie.Expired = true;
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+
+        /// <summary>
+        /// Retrieves all cookies stored in the wrapper and returns them in a CookieCollection.
+        /// </summary>
+        /// <returns>A CookieCollection instance containing all the cookies in the wrapper.</returns>
+        public CookieCollection GetAllCookies()
+        {
+            CookieCollection lstCookies = new CookieCollection();
+            Hashtable table = (Hashtable)_Cookies.GetType().InvokeMember("m_domainTable", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.GetField | System.Reflection.BindingFlags.Instance, null, _Cookies, new object[] { });
+            foreach (object pathList in table.Values)
+            {
+                SortedList lstCookieCol = (SortedList)pathList.GetType().InvokeMember("m_list", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.GetField | System.Reflection.BindingFlags.Instance, null, pathList, new object[] { });
+                foreach (CookieCollection colCookies in lstCookieCol.Values)
+                    foreach (Cookie c in colCookies)
+                    {
+                        lstCookies.Add(c);
+                    }
+            }
+            return lstCookies;
+        }
+
+
+        /// <summary>
+        /// Returns the HTTP cookie headers that contain the HTTP cookies that represent the System.Net.Cookie instances that are associated with the specified URL.
+        /// </summary>
+        /// <param name="URL">Required. The URL of the cookies desired.</param>
+        /// <returns></returns>
+        public string GetCookieString(string URL)
+        {
+            try
+            {
+                return _Cookies.GetCookieHeader(new Uri(URL));
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
+        }
+
+
+        /// <summary>
+        /// Returns System.Net.CookieCollection that contains the System.Net.Cookie instances that associate with the specified URL
+        /// </summary>
+        /// <param name="URL">Required. The URL of the cookies desired.</param>
+        /// <returns></returns>
+        public CookieCollection GetCookieCollection(string URL)
+        {
+            try
+            {
+                return _Cookies.GetCookies(new Uri(URL));
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+
+        /// <summary>
+        /// Adds and associates a specified cookie with a URL in the wrapper's CookieCollection.
+        /// </summary>
+        /// <param name="URL">Required. The URL to associate the cookie with.</param>
+        /// <param name="Cookie">Required. The cookie to add to the CookieCollection.</param>
+        public void AddCookie(string URL, Cookie Cookie)
+        {
+            try
+            {
+                _Cookies.Add(new Uri(URL), Cookie);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+
+        /// <summary>
+        /// Adds and associates an array of cookies with a URL in the wrapper's CookieCollection.
+        /// </summary>
+        /// <param name="URL">Required. The URL to associate all cookies with.</param>
+        /// <param name="Cookie">Required. The array of cookies to add to the CookieCollection.</param>
+        public void AddCookieArray(string URL, Cookie[] Cookie)
+        {
+            try
+            {
+                foreach (Cookie c in Cookie)
+                {
+                    _Cookies.Add(new Uri(URL), c);
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+
+        /// <summary>
+        /// Sets and associates a specified CookieCollection with a URL in the wrapper's CookieCollection.
+        /// </summary>
+        /// <param name="URL">Required. The URL to associate the CookieCollection with.</param>
+        /// <param name="CCollection">Required. The CookieCollection to add to the wrapper's CookieCollection.</param>
+        public void AddCookieCollection(string URL, CookieCollection CCollection)
+        {
+            try
+            {
+                _Cookies.Add(new Uri(URL), CCollection);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+
+        /// <summary>
+        /// Adds and associates System.Net.Cookie instances from an HTTP cookie header to the wrapper's CookieCollection with a specific URL.
+        /// </summary>
+        /// <param name="URL">Required. The specific URL to associate the cookie instances with.</param>
+        /// <param name="CookieString">Required. The string of cookies or cookie header to add.</param>
+        public void AddCookieString(string URL, string CookieString)
+        {
+            string[] strCookies = CookieString.Split(new string[] { "; " }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string strCookie in strCookies)
+            {
+                _Cookies.SetCookies(new Uri(URL), strCookie);
+            }
+        }
+
+
+        /// <summary>
+        /// Clones the wrapper's cookies of a specific domain and associates them with a new domain.
+        /// </summary>
+        /// <param name="OldDomain">Required. The old domain to clone cookies from.</param>
+        /// <param name="NewDomain">Required. The new domain to clone cookies to.</param>
+        /// <returns></returns>
+        public bool CloneCookies(string OldDomain, string NewDomain)
+        {
+            try
+            {
+                return CloneCookies(new Uri(OldDomain), new Uri(NewDomain));
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+
+        /// <summary>
+        /// Clones the wrapper's cookies of a specific domain and associates them with a new domain.
+        /// </summary>
+        /// <param name="OldDomain">Required. The old domain to clone cookies from.</param>
+        /// <param name="NewDomain">Required. The new domain to clone cookies to.</param>
+        /// <returns></returns>
+        public bool CloneCookies(Uri OldDomain, Uri NewDomain)
+        {
+            try
+            {
+                string CookNewStr = string.Empty;
+                foreach (System.Net.Cookie Cook in _Cookies.GetCookies(OldDomain))
+                {
+                    _Cookies.SetCookies(NewDomain, Cook.Name + "=" + Cook.Value + ((Cook.Expires != null) ? "; expires=" + Cook.Expires.ToString() : "") + (!(Cook.Path == string.Empty) ? "; path=" + Cook.Path : "" + "; domain=") + NewDomain.Host + (Cook.HttpOnly ? "; HttpOnly" : ""));
+                }
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        #endregion
+
+        #region Pre-Request
 
         public static string UrlEncode(string encode, string encoding)
         {
@@ -163,33 +364,9 @@ namespace GoogleMusic.Net
             return request;
         }
 
-        public byte[] GetContent(HttpWebResponse response)
-        {
-            using (Stream responseStream = response.GetResponseStream())
-            {
-                using (MemoryStream memory = new MemoryStream())
-                {
-                    responseStream.CopyTo(memory, _BufferSize);
-                    return memory.ToArray();
-                }
-            }
-        }
-
-        public async Task<byte[]> GetContentAsync(HttpWebResponse response)
-        {
-            using (Stream responseStream = response.GetResponseStream())
-            {
-                using (MemoryStream memory = new MemoryStream())
-                {
-                    await responseStream.CopyToAsync(memory, _BufferSize);
-                    return memory.ToArray();
-                }
-            }
-        }
-
         #endregion
 
-        #region Upload
+        #region Request: Upload
 
         public HttpWebResponse UploadDataSync(HttpWebRequest request, string contentType, byte[] data)
         {
@@ -271,6 +448,34 @@ namespace GoogleMusic.Net
             }
 
             return result;
+        }
+
+        #endregion
+
+        #region Post-Request
+
+        public byte[] GetContent(HttpWebResponse response)
+        {
+            using (Stream responseStream = response.GetResponseStream())
+            {
+                using (MemoryStream memory = new MemoryStream())
+                {
+                    responseStream.CopyTo(memory, _BufferSize);
+                    return memory.ToArray();
+                }
+            }
+        }
+
+        public async Task<byte[]> GetContentAsync(HttpWebResponse response)
+        {
+            using (Stream responseStream = response.GetResponseStream())
+            {
+                using (MemoryStream memory = new MemoryStream())
+                {
+                    await responseStream.CopyToAsync(memory, _BufferSize);
+                    return memory.ToArray();
+                }
+            }
         }
 
         #endregion
