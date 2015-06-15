@@ -151,7 +151,7 @@ namespace GoogleMusic.Clients
 
             try
             {
-                byte[] response = http.GetContent(http.UploadDataSync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form.ContentType, form.Bytes));
+                byte[] response = http.ResponseToArray(http.Request(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form.ContentType, form.Bytes));
 
 
                 // Bytes -> String -> JSON
@@ -198,7 +198,7 @@ namespace GoogleMusic.Clients
             
             try
             {
-                byte[] response = await http.GetContentAsync(await http.UploadDataAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form.ContentType, form.Bytes));
+                byte[] response = await http.ResponseToArrayAsync(await http.RequestAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form.ContentType, form.Bytes));
 
                 // Bytes -> String -> JSON
                 Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Encoding.UTF8.GetString(response));
@@ -244,7 +244,7 @@ namespace GoogleMusic.Clients
             
             try
             {
-                byte[] response = http.GetContent(http.UploadDataSync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form.ContentType, form.Bytes));
+                byte[] response = http.ResponseToArray(http.Request(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form.ContentType, form.Bytes));
 
                 // Bytes -> String -> JSON
                 Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Encoding.UTF8.GetString(response));
@@ -289,7 +289,7 @@ namespace GoogleMusic.Clients
 
             try
             {
-                byte[] response = await http.GetContentAsync(await http.UploadDataAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form.ContentType, form.Bytes));
+                byte[] response = await http.ResponseToArrayAsync(await http.RequestAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form.ContentType, form.Bytes));
 
                 // Bytes -> String -> JSON
                 Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Encoding.UTF8.GetString(response));

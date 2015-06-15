@@ -341,11 +341,20 @@ namespace GoogleMusic.Net
 
         #region Pre-Request
 
+        /// <summary>
+        /// Creates and prepares a new HttpWebRequest object to use.
+        /// </summary>
+        /// <param name="url">Required. The destination URL to visit.</param>
+        /// <param name="method">Optional. The HTTP method of the request. The default value is GET.</param>
+        /// <param name="referer">Optional. The Referer HTTP header to send with the request. The default is nothing.</param>
+        /// <param name="accept">Optional. The Accept HTTP header to send with the request. The default is */*.</param>
+        /// <returns></returns>
         public HttpWebRequest CreateRequest(string url, string method = "GET", string referer = "", string accept = "*/*")
         {
             HttpWebRequest request;
 
             request = (HttpWebRequest)HttpWebRequest.Create(url);
+            request.Method = method;
             request.Proxy = (_UseProxy ? _Proxy : null);
             request.AutomaticDecompression = _DecompressionMethod;
 
@@ -361,9 +370,16 @@ namespace GoogleMusic.Net
 
         #endregion
 
-        #region Request: Upload
+        #region Request
 
-        public HttpWebResponse UploadDataSync(HttpWebRequest request, string contentType, byte[] data)
+        /// <summary>
+        /// Performs an HttpWebRequest with request data.
+        /// </summary>
+        /// <param name="request">Required. The HttpWebRequest to represent the base request.</param>
+        /// <param name="contentType">Required. The Content-Type HTTP header to send with the request.</param>
+        /// <param name="data">Required. A byte array representing the request data to send with the request.</param>
+        /// <returns>Returns a HttpWebResponse representing the response from the server.</returns>
+        public HttpWebResponse Request(HttpWebRequest request, string contentType, byte[] data)
         {
             request.ContentLength = (data != null) ? data.Length : 0;
 
@@ -382,7 +398,16 @@ namespace GoogleMusic.Net
             return (HttpWebResponse)request.GetResponse();
         }
 
-        public async Task<HttpWebResponse> UploadDataAsync(HttpWebRequest request, string contentType, byte[] data, TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
+        /// <summary>
+        /// Asynchronously performs an HttpWebRequest with request data.
+        /// </summary>
+        /// <param name="request">Required. The HttpWebRequest to represent the base request.</param>
+        /// <param name="contentType">Required. The Content-Type HTTP header to send with the request.</param>
+        /// <param name="data">Required. A byte array representing the request data to send with the request.</param>
+        /// <param name="progressHandler">Optional. The event handler to invoke when progress has changed.</param>
+        /// <param name="completeHandler">Optional. The event handler to invoke when the request has finished.</param>
+        /// <returns>Returns a HttpWebResponse representing the response from the server.</returns>
+        public async Task<HttpWebResponse> RequestAsync(HttpWebRequest request, string contentType, byte[] data, TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
         {
             request.ContentLength = (data != null) ? data.Length : 0;
 
@@ -394,17 +419,18 @@ namespace GoogleMusic.Net
             {
                 using (MemoryStream ms = new MemoryStream(data))
                 {
+                    // Make buffer either the buffer size or smaller if the data is small
                     byte[] buffer = new byte[Math.Min(_BufferSize, data.Length)];
                     long bytesRead = 0;
-                    int chunk;
+                    int chunkRead;
 
-                    while ((chunk = await ms.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                    while ((chunkRead = await ms.ReadAsync(buffer, 0, buffer.Length)) > 0)
                     {
-                        // Start upload asynchronously
-                        Task uploadTask = uploadStream.WriteAsync(buffer, 0, chunk);
+                        // Start writing to stream asynchronously
+                        Task writeTask = uploadStream.WriteAsync(buffer, 0, chunkRead);
 
                         // Calculate bytes
-                        bytesRead += chunk;
+                        bytesRead += chunkRead;
 
                         // ProgressHandler: Begin asynchronous invoke
                         IAsyncResult progressHandlerResult = null;
@@ -412,7 +438,7 @@ namespace GoogleMusic.Net
                             progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, bytesRead / ms.Length), null, null);
 
                         // Wait for chunk upload to finish
-                        await uploadTask;
+                        await writeTask;
 
                         // End asynchronous ProgressHandler
                         if (progressHandler != null && progressHandlerResult != null)
@@ -449,27 +475,75 @@ namespace GoogleMusic.Net
 
         #region Post-Request
 
-        public byte[] GetContent(HttpWebResponse response)
+        /// <summary>
+        /// Reads the content of an HTTP response to a byte array.
+        /// </summary>
+        /// <param name="response">Required. The HttpWebResponse object representing the response to read.</param>
+        /// <param name="disposeResponse">Optional. A boolean value determining whether to dispose of the response when finished. The default is true.</param>
+        /// <returns>Returns a byte array representing the content of the response.</returns>
+        public byte[] ResponseToArray(HttpWebResponse response, bool disposeResponse = true)
         {
-            using (Stream responseStream = response.GetResponseStream())
+            using (MemoryStream memory = new MemoryStream())
             {
-                using (MemoryStream memory = new MemoryStream())
+                using (Stream responseStream = response.GetResponseStream())
                 {
                     responseStream.CopyTo(memory, _BufferSize);
+                    if (disposeResponse)
+                        response.Close();
+
                     return memory.ToArray();
                 }
             }
         }
 
-        public async Task<byte[]> GetContentAsync(HttpWebResponse response)
+        /// <summary>
+        /// Reads the content of an HTTP response to a byte array.
+        /// </summary>
+        /// <param name="response">Required. The HttpWebResponse object representing the response to read.</param>
+        /// <param name="disposeResponse">Optional. A boolean value determining whether to dispose of the response when finished. The default is true.</param>
+        /// <param name="progressHandler">Optional. The event handler to invoke when progress has changed.</param>
+        /// <param name="completeHandler">Optional. The event handler to invoke when the response has been read.</param>
+        /// <returns>Returns a byte array representing the content of the response.</returns>
+        public async Task<byte[]> ResponseToArrayAsync(HttpWebResponse response, bool disposeResponse = true, TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
         {
-            using (Stream responseStream = response.GetResponseStream())
+            using (MemoryStream memory = new MemoryStream())
             {
-                using (MemoryStream memory = new MemoryStream())
+                using (Stream responseStream = response.GetResponseStream())
                 {
-                    await responseStream.CopyToAsync(memory, _BufferSize);
-                    return memory.ToArray();
+                    byte[] buffer = new byte[_BufferSize];
+                    long bytesRead = 0;
+                    int chunkRead;
+
+                    while ((chunkRead = await responseStream.ReadAsync(buffer, 0, _BufferSize)) > 0)
+                    {
+                        // Start writing to memory asynchronously
+                        Task readTask = memory.WriteAsync(buffer, 0, _BufferSize);
+
+                        // Calculate bytes
+                        bytesRead += chunkRead;
+
+                        // ProgressHandler: Begin asynchronous invoke
+                        IAsyncResult progressHandlerResult = null;
+                        if (progressHandler != null && response.ContentLength > 0)
+                            progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, bytesRead / response.ContentLength), null, null);
+
+                        // Wait for chunk upload to finish
+                        await readTask;
+
+                        // End asynchronous ProgressHandler
+                        if (progressHandler != null && progressHandlerResult != null)
+                            progressHandler.EndInvoke(progressHandlerResult);
+                    }
                 }
+
+                if (disposeResponse)
+                    response.Close();
+
+                // Invoke 
+                if (completeHandler != null)
+                    completeHandler.Invoke();
+
+                return memory.ToArray();
             }
         }
 
