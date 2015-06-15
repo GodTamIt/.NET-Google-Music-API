@@ -4,16 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GoogleMusicAPI.Clients
+namespace GoogleMusic.Clients
 {
-    class WebClient
+    public class WebClient
     {
+
+        #region Members
+        private Http http;
+        #endregion
 
         #region Constructor
 
         public WebClient(bool validate = true, bool verifySSL = true)
         {
-
+            http = new Http();
         }
 
         #endregion
@@ -23,7 +27,18 @@ namespace GoogleMusicAPI.Clients
 
         public bool Login(string email, string password)
         {
+            return true;
+        }
 
+        public async Task<bool> LoginAsync(string email, string password)
+        {
+
+            return true;
+        }
+
+        public void Logout()
+        {
+            http = new Http();
         }
 
         #endregion

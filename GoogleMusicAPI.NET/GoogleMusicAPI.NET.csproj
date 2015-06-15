@@ -8,7 +8,7 @@
     <ProjectGuid>{A59777A2-F0D3-41DA-9F2D-C7BA0178090B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>GoogleMusicAPI</RootNamespace>
+    <RootNamespace>GoogleMusic</RootNamespace>
     <AssemblyName>GoogleMusicAPI</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -56,8 +56,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="API.cs" />
+    <Compile Include="Clients\MusicManagerClient.cs" />
+    <Compile Include="Web\FormBuilder.cs" />
     <Compile Include="Clients\WebClient.cs" />
-    <Compile Include="HTTP.cs" />
+    <Compile Include="Web\Http.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
