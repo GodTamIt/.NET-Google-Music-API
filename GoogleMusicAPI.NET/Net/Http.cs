@@ -389,10 +389,7 @@ namespace GoogleMusic.Net
             // Write to upload stream
             using (Stream uploadStream = request.GetRequestStream())
             {
-                using (MemoryStream ms = new MemoryStream(data))
-                {
-                    ms.CopyTo(uploadStream, _BufferSize);
-                }
+                uploadStream.Write(data, 0, data.Length);
             }
 
             return (HttpWebResponse)request.GetResponse();
@@ -469,6 +466,27 @@ namespace GoogleMusic.Net
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Calculates an optimal buffer size given a content length
+        /// </summary>
+        /// <param name="contentLength">Required. The size, in bytes, of the content being buffered.</param>
+        /// <returns>Returns a 32-bit signed integer representing a suggested buffer size.</returns>
+        internal int CalculateOptimalBufferSize(long contentLength)
+        {
+            if (contentLength < 0L)
+                return 65536; // Default 60 KB
+            else if (contentLength > 33554432L)
+                return 1048576; // 1 MB when content is > 32 MB
+            else if (contentLength > 8388608L)
+                return 524288; // 0.5 MB when content is > 32 MB
+            else if (contentLength > 1048576L)
+                return 131072;
+            else if (contentLength > 131072L)
+                return 32768;
+            else
+                return 8192;
         }
 
         #endregion
@@ -554,8 +572,14 @@ namespace GoogleMusic.Net
 
     internal class FormBuilder : IDisposable
     {
+        #region Members
         private string boundary = "----------" + DateTime.Now.Ticks.ToString("x");
-        private MemoryStream ms;
+        private List<Stream> streams = new List<Stream>();
+
+        private long _Length = new long();
+        #endregion
+
+        #region Properties
 
         public static FormBuilder Empty
         {
@@ -570,13 +594,21 @@ namespace GoogleMusic.Net
             get { return "multipart/form-data; boundary=" + boundary; }
         }
 
-        public FormBuilder()
+        public long Length
         {
-            ms = new MemoryStream();
+            get { return _Length; }
+            set { _Length = value; }
         }
+
+        #endregion
+
+        #region Add
 
         public void AddField(string key, string value)
         {
+            if (streams.Count < 1 || !(streams[streams.Count - 1] is MemoryStream))
+                streams.Add(new MemoryStream());
+
             StringBuilder sb = new StringBuilder();
 
             sb.AppendFormat("\r\n--{0}\r\n", boundary);
@@ -584,7 +616,7 @@ namespace GoogleMusic.Net
 
             byte[] sbData = Encoding.UTF8.GetBytes(sb.ToString());
 
-            ms.Write(sbData, 0, sbData.Length);
+            streams[streams.Count - 1].Write(sbData, 0, sbData.Length);
         }
 
         public void AddFields(Dictionary<string, string> fields)
@@ -593,23 +625,11 @@ namespace GoogleMusic.Net
                 this.AddField(key.Key, key.Value);
         }
 
-        public void AddFile(string name, string fileName, byte[] file)
-        {
-            StringBuilder sb = new StringBuilder();
-
-            sb.AppendFormat("\r\n--{0}\r\n", boundary);
-            sb.AppendFormat("Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\n", name, fileName);
-
-            sb.AppendFormat("Content-Type: {0}\r\n\r\n", "application/octet-stream");
-
-            byte[] sbData = Encoding.UTF8.GetBytes(sb.ToString());
-            ms.Write(sbData, 0, sbData.Length);
-
-            ms.Write(file, 0, file.Length);
-        }
-
         public void AddFile(string name, string fileName, FileStream file)
         {
+            if (streams.Count < 1 || !(streams[streams.Count - 1] is MemoryStream))
+                streams.Add(new MemoryStream());
+
             StringBuilder sb = new StringBuilder();
 
             sb.AppendFormat("\r\n--{0}\r\n", boundary);
@@ -618,15 +638,48 @@ namespace GoogleMusic.Net
             sb.AppendFormat("Content-Type: {0}\r\n\r\n", "application/octet-stream");
 
             byte[] sbData = Encoding.UTF8.GetBytes(sb.ToString());
-            ms.Write(sbData, 0, sbData.Length);
+            streams[streams.Count - 1].Write(sbData, 0, sbData.Length);
 
-            file.CopyTo(ms);
+            streams.Add(file);
         }
+
+        #endregion
+
+        #region WriteTo
+
+        public void WriteTo(Stream destination, int bufferSize)
+        {
+            foreach (Stream s in streams)
+            {
+                if (s is MemoryStream)
+                {
+                    MemoryStream ms = (MemoryStream)s;
+                    ms.WriteTo(destination);
+                }
+                else
+                {
+                    s.CopyTo(destination, bufferSize);
+                }
+            }
+        }
+
+        public void WriteToAsync(Stream destination, int bufferSize,
+            CancellationToken cancellationToken = default(CancellationToken), TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
+        {
+
+        }
+
+        #endregion
+
+        #region Dispose
 
         public void Dispose()
         {
-            ms.Dispose();
+            foreach (Stream s in streams)
+                s.Dispose();
         }
+
+        #endregion
 
     }
 }
