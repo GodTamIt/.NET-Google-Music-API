@@ -550,6 +550,85 @@ namespace GoogleMusic.Net
         #endregion
 
     }
+
+
+    internal class FormBuilder : IDisposable
+    {
+        private string boundary = "----------" + DateTime.Now.Ticks.ToString("x");
+        private MemoryStream ms;
+
+        public static FormBuilder Empty
+        {
+            get
+            {
+                return new FormBuilder();
+            }
+        }
+
+        public String ContentType
+        {
+            get { return "multipart/form-data; boundary=" + boundary; }
+        }
+
+        public FormBuilder()
+        {
+            ms = new MemoryStream();
+        }
+
+        public void AddField(string key, string value)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendFormat("\r\n--{0}\r\n", boundary);
+            sb.AppendFormat("Content-Disposition: form-data; name=\"{0}\";\r\n\r\n{1}", key, value);
+
+            byte[] sbData = Encoding.UTF8.GetBytes(sb.ToString());
+
+            ms.Write(sbData, 0, sbData.Length);
+        }
+
+        public void AddFields(Dictionary<string, string> fields)
+        {
+            foreach (KeyValuePair<string, string> key in fields)
+                this.AddField(key.Key, key.Value);
+        }
+
+        public void AddFile(string name, string fileName, byte[] file)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendFormat("\r\n--{0}\r\n", boundary);
+            sb.AppendFormat("Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\n", name, fileName);
+
+            sb.AppendFormat("Content-Type: {0}\r\n\r\n", "application/octet-stream");
+
+            byte[] sbData = Encoding.UTF8.GetBytes(sb.ToString());
+            ms.Write(sbData, 0, sbData.Length);
+
+            ms.Write(file, 0, file.Length);
+        }
+
+        public void AddFile(string name, string fileName, FileStream file)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendFormat("\r\n--{0}\r\n", boundary);
+            sb.AppendFormat("Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\n", name, fileName);
+
+            sb.AppendFormat("Content-Type: {0}\r\n\r\n", "application/octet-stream");
+
+            byte[] sbData = Encoding.UTF8.GetBytes(sb.ToString());
+            ms.Write(sbData, 0, sbData.Length);
+
+            file.CopyTo(ms);
+        }
+
+        public void Dispose()
+        {
+            ms.Dispose();
+        }
+
+    }
 }
 
 
