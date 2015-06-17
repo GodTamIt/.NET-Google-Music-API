@@ -377,9 +377,9 @@ namespace GoogleMusic.Net
                 request.ContentType = formData.ContentType;
 
             // Write to upload stream
-            using (Stream uploadStream = request.GetRequestStream())
+            using (Stream requestStream = request.GetRequestStream())
             {
-                formData.WriteTo(uploadStream, GetOptimalBufferSize(formData.Length));
+                formData.WriteTo(requestStream, GetOptimalBufferSize(formData.Length));
             }
 
             return (HttpWebResponse)request.GetResponse();
@@ -593,7 +593,7 @@ namespace GoogleMusic.Net
         /// <param name="progressHandler">Optional. The event handler to invoke when progress has changed.</param>
         /// <param name="completeHandler">Optional. The event handler to invoke when the response has been read.</param>
         /// <returns>Returns a Task object containing a byte array result representing the content of the response.</returns>
-        public async Task<byte[]> ToArrayAsync(this HttpWebResponse response, bool disposeResponse = true,
+        public static async Task<byte[]> ToArrayAsync(this HttpWebResponse response, bool disposeResponse = true,
             CancellationToken cancellationToken = default(CancellationToken), TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
         {
             byte[] result;
@@ -608,10 +608,10 @@ namespace GoogleMusic.Net
                     long bytesRead = 0;
 
                     // ReadTask: Start reading before first iteration.
-                    int chunkRead = await responseStream.ReadAsync(result, 0, (int)Math.Min(contentLength - bytesRead, bufferSize));
+                    int chunkRead = await responseStream.ReadAsync(result, 0, (int)Math.Min(contentLength - bytesRead, bufferSize), cancellationToken);
                     bytesRead += chunkRead;
 
-                    while (bytesRead < contentLength && chunkRead > 0)
+                    while (bytesRead < contentLength && chunkRead > 0 && !cancellationToken.IsCancellationRequested)
                     {
                         // ProgressHandler: Begin asynchronous invoke
                         IAsyncResult progressHandlerResult = null;
@@ -692,7 +692,7 @@ namespace GoogleMusic.Net
         /// <param name="progressHandler">Optional. The event handler to invoke when progress has changed.</param>
         /// <param name="completeHandler">Optional. The event handler to invoke when the response has been read.</param>
         /// <returns>Returns a Task object containing a string result representing the content of the response.</returns>
-        public async Task<string> ToUTF8(this HttpWebResponse response, bool disposeResponse = true,
+        public static async Task<string> ToUTF8Async(this HttpWebResponse response, bool disposeResponse = true,
             CancellationToken cancellationToken = default(CancellationToken), TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
         {
             return Encoding.UTF8.GetString(await ToArrayAsync(response, disposeResponse, cancellationToken, progressHandler, completeHandler));

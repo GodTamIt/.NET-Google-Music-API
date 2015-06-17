@@ -58,8 +58,9 @@
     <Compile Include="API.cs" />
     <Compile Include="Clients\IClient.cs" />
     <Compile Include="Clients\MusicManagerClient.cs" />
+    <Compile Include="Net\FormBuilder.cs" />
     <Compile Include="Result.cs" />
-    <Compile Include="ExceptionWriter.cs" />
+    <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="Clients\WebClient.cs" />
     <Compile Include="Net\Http.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
