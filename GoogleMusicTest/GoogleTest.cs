@@ -19,7 +19,7 @@ namespace GoogleMusicTest
         GoogleMusicPlaylists pls;
 
         string ClientId = "215459815136.apps.googleusercontent.com";
-        string ClientSecret = "tJ1gxPFfqt6FFvMqXm29QE6T";
+        string ClientSecret = "";
 
         public GoogleTest()
         {
