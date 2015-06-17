@@ -367,6 +367,29 @@ namespace GoogleMusic.Net
         /// </summary>
         /// <param name="request">Required. The HttpWebRequest to represent the base request.</param>
         /// <param name="contentType">Required. The Content-Type HTTP header to send with the request.</param>
+        /// <param name="formData">Required. A FormBuilder object representing the form data to send.</param>
+        /// <returns>Returns a HttpWebResponse representing the response from the server.</returns>
+        public HttpWebResponse Request(HttpWebRequest request, string contentType, FormBuilder formData)
+        {
+            request.ContentLength = formData.Length;
+
+            if (!String.IsNullOrEmpty(contentType))
+                request.ContentType = contentType;
+
+            // Write to upload stream
+            using (Stream uploadStream = request.GetRequestStream())
+            {
+                formData.WriteTo(uploadStream, GetOptimalBufferSize(formData.Length));
+            }
+
+            return (HttpWebResponse)request.GetResponse();
+        }
+
+        /// <summary>
+        /// Performs an HttpWebRequest with request data.
+        /// </summary>
+        /// <param name="request">Required. The HttpWebRequest to represent the base request.</param>
+        /// <param name="contentType">Required. The Content-Type HTTP header to send with the request.</param>
         /// <param name="data">Required. A byte array representing the request data to send with the request.</param>
         /// <returns>Returns a HttpWebResponse representing the response from the server.</returns>
         public HttpWebResponse Request(HttpWebRequest request, string contentType, byte[] data)
@@ -376,13 +399,59 @@ namespace GoogleMusic.Net
             if (!String.IsNullOrEmpty(contentType))
                 request.ContentType = contentType;
 
-            // Write to upload stream
-            using (Stream uploadStream = request.GetRequestStream())
+            // Write to request stream
+            using (Stream requestStream = request.GetRequestStream())
             {
-                uploadStream.Write(data, 0, data.Length);
+                requestStream.Write(data, 0, data.Length);
             }
 
             return (HttpWebResponse)request.GetResponse();
+        }
+
+        /// <summary>
+        /// Asynchronously performs an HttpWebRequest with request data.
+        /// </summary>
+        /// <param name="request">Required. The HttpWebRequest to represent the base request.</param>
+        /// <param name="contentType">Required. The Content-Type HTTP header to send with the request.</param>
+        /// <param name="formData">Required. A FormBuilder object representing the form data to send.</param>
+        /// <param name="cancellationToken">Optional. The token to monitor for cancellation requests.</param>
+        /// <param name="progressHandler">Optional. The event handler to invoke when progress has changed.</param>
+        /// <param name="completeHandler">Optional. The event handler to invoke when the request has finished.</param>
+        /// <returns>Returns a HttpWebResponse representing the response from the server.</returns>
+        public async Task<HttpWebResponse> RequestAsync(HttpWebRequest request, string contentType, FormBuilder formData,
+            CancellationToken cancellationToken = default(CancellationToken), TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
+        {
+            request.ContentLength = formData.Length;
+
+            if (!String.IsNullOrEmpty(contentType))
+                request.ContentType = contentType;
+
+            // Write to request stream
+            using (Stream requestStream = await request.GetRequestStreamAsync())
+            {
+                await formData.WriteToAsync(requestStream, GetOptimalBufferSize(formData.Length));
+            }
+
+            HttpWebResponse result;
+
+            {
+                // HttpWebResponse: Start task
+                Task<WebResponse> resultTask = request.GetResponseAsync();
+
+                // CompleteHandler: Begin asynchronous invoke
+                IAsyncResult completeHandlerResult = null;
+                if (completeHandler != null)
+                    completeHandler.BeginInvoke(null, null);
+
+                // HttpWebResponse: Await result
+                result = (HttpWebResponse)(await resultTask);
+
+                // CompleteHandler: End asynchronous invoke
+                if (completeHandler != null && completeHandlerResult != null)
+                    completeHandler.EndInvoke(completeHandlerResult);
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -403,8 +472,8 @@ namespace GoogleMusic.Net
             if (!String.IsNullOrEmpty(contentType))
                 request.ContentType = contentType;
 
-            // Write to upload stream
-            using (Stream uploadStream = await request.GetRequestStreamAsync())
+            // Write to request stream
+            using (Stream requestStream = await request.GetRequestStreamAsync())
             {
                 int bufferSize = GetOptimalBufferSize(data.Length);
                 int bytesDone = new int();
@@ -418,7 +487,7 @@ namespace GoogleMusic.Net
 
                     // WriteTask: Start writing to stream asynchronously
                     int nextChunkSize = Math.Min(data.Length - bytesDone, bufferSize);
-                    Task writeTask = uploadStream.WriteAsync(data, bytesDone, nextChunkSize, cancellationToken);                    
+                    Task writeTask = requestStream.WriteAsync(data, bytesDone, nextChunkSize, cancellationToken);                    
 
                     // End asynchronous ProgressHandler
                     if (progressHandler != null && progressHandlerResult != null)
