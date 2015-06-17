@@ -60,7 +60,6 @@
     <Compile Include="Clients\MusicManagerClient.cs" />
     <Compile Include="Result.cs" />
     <Compile Include="ExceptionWriter.cs" />
-    <Compile Include="Net\Form.cs" />
     <Compile Include="Clients\WebClient.cs" />
     <Compile Include="Net\Http.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
