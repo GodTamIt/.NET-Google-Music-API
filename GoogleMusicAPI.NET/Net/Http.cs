@@ -617,6 +617,7 @@ namespace GoogleMusic.Net
             byte[] sbData = Encoding.UTF8.GetBytes(sb.ToString());
 
             streams[streams.Count - 1].Write(sbData, 0, sbData.Length);
+            _Length += sbData.Length;
         }
 
         public void AddFields(Dictionary<string, string> fields)
@@ -625,7 +626,7 @@ namespace GoogleMusic.Net
                 this.AddField(key.Key, key.Value);
         }
 
-        public void AddFile(string name, string fileName, FileStream file)
+        public void AddFile(string name, string fileName, FileStream fileStream)
         {
             if (streams.Count < 1 || !(streams[streams.Count - 1] is MemoryStream))
                 streams.Add(new MemoryStream());
@@ -639,8 +640,10 @@ namespace GoogleMusic.Net
 
             byte[] sbData = Encoding.UTF8.GetBytes(sb.ToString());
             streams[streams.Count - 1].Write(sbData, 0, sbData.Length);
+            _Length += sbData.Length;
 
-            streams.Add(file);
+            streams.Add(fileStream);
+            _Length += fileStream.Length;
         }
 
         #endregion
