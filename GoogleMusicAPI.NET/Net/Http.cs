@@ -369,12 +369,12 @@ namespace GoogleMusic.Net
         /// <param name="contentType">Required. The Content-Type HTTP header to send with the request.</param>
         /// <param name="formData">Required. A FormBuilder object representing the form data to send.</param>
         /// <returns>Returns a HttpWebResponse representing the response from the server.</returns>
-        public HttpWebResponse Request(HttpWebRequest request, string contentType, FormBuilder formData)
+        public HttpWebResponse Request(HttpWebRequest request, FormBuilder formData)
         {
             request.ContentLength = formData.Length;
 
-            if (!String.IsNullOrEmpty(contentType))
-                request.ContentType = contentType;
+            if (!String.IsNullOrEmpty(formData.ContentType))
+                request.ContentType = formData.ContentType;
 
             // Write to upload stream
             using (Stream uploadStream = request.GetRequestStream())
@@ -418,13 +418,13 @@ namespace GoogleMusic.Net
         /// <param name="progressHandler">Optional. The event handler to invoke when progress has changed.</param>
         /// <param name="completeHandler">Optional. The event handler to invoke when the request has finished.</param>
         /// <returns>Returns a HttpWebResponse representing the response from the server.</returns>
-        public async Task<HttpWebResponse> RequestAsync(HttpWebRequest request, string contentType, FormBuilder formData,
+        public async Task<HttpWebResponse> RequestAsync(HttpWebRequest request, FormBuilder formData,
             CancellationToken cancellationToken = default(CancellationToken), TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
         {
             request.ContentLength = formData.Length;
 
-            if (!String.IsNullOrEmpty(contentType))
-                request.ContentType = contentType;
+            if (!String.IsNullOrEmpty(formData.ContentType))
+                request.ContentType = formData.ContentType;
 
             // Write to request stream
             using (Stream requestStream = await request.GetRequestStreamAsync())
@@ -544,15 +544,17 @@ namespace GoogleMusic.Net
 
         #endregion
 
-        #region Post-Request
+    }
 
+    internal static class HttpExtensions
+    {
         /// <summary>
         /// Reads the content of an HTTP response to a byte array.
         /// </summary>
         /// <param name="response">Required. The HttpWebResponse object representing the response to read.</param>
         /// <param name="disposeResponse">Optional. A boolean value determining whether to dispose of the response when finished. The default is true.</param>
         /// <returns>Returns a byte array representing the content of the response.</returns>
-        public static byte[] ResponseToArray(HttpWebResponse response, bool disposeResponse = true)
+        public static byte[] ToArray(this HttpWebResponse response, bool disposeResponse = true)
         {
             byte[] result;
             if (response.ContentLength > 0)
@@ -569,12 +571,12 @@ namespace GoogleMusic.Net
                 {
                     using (Stream responseStream = response.GetResponseStream())
                     {
-                        responseStream.CopyTo(memoryStream, GetOptimalBufferSize(-1));
+                        responseStream.CopyTo(memoryStream, Http.GetOptimalBufferSize(-1));
                     }
                     result = memoryStream.ToArray();
                 }
             }
-            
+
 
             if (disposeResponse)
                 response.Close();
@@ -591,7 +593,7 @@ namespace GoogleMusic.Net
         /// <param name="progressHandler">Optional. The event handler to invoke when progress has changed.</param>
         /// <param name="completeHandler">Optional. The event handler to invoke when the response has been read.</param>
         /// <returns>Returns a Task object containing a byte array result representing the content of the response.</returns>
-        public async Task<byte[]> ResponseToArrayAsync(HttpWebResponse response, bool disposeResponse = true,
+        public async Task<byte[]> ToArrayAsync(this HttpWebResponse response, bool disposeResponse = true,
             CancellationToken cancellationToken = default(CancellationToken), TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
         {
             byte[] result;
@@ -599,7 +601,7 @@ namespace GoogleMusic.Net
             {
                 long contentLength = response.ContentLength;
                 result = new byte[contentLength];
-                int bufferSize = GetOptimalBufferSize(contentLength);
+                int bufferSize = Http.GetOptimalBufferSize(contentLength);
 
                 using (Stream responseStream = response.GetResponseStream())
                 {
@@ -631,7 +633,7 @@ namespace GoogleMusic.Net
             }
             else
             {
-                int bufferSize = GetOptimalBufferSize(-1);
+                int bufferSize = Http.GetOptimalBufferSize(-1);
                 using (MemoryStream memory = new MemoryStream(bufferSize))
                 {
                     using (Stream responseStream = response.GetResponseStream())
@@ -648,7 +650,7 @@ namespace GoogleMusic.Net
                                 progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesRead / (double)response.ContentLength), null, null);
 
                             // WriteTask: Start writing to memory asynchronously
-                            Task writeTask = memory.WriteAsync(buffer, 0, chunkRead, cancellationToken);                          
+                            Task writeTask = memory.WriteAsync(buffer, 0, chunkRead, cancellationToken);
 
                             // End asynchronous ProgressHandler
                             if (progressHandler != null && progressHandlerResult != null)
@@ -673,9 +675,9 @@ namespace GoogleMusic.Net
         /// <param name="response">Required. The HttpWebResponse object representing the response to read.</param>
         /// <param name="disposeResponse">Optional. A boolean value determining whether to dispose of the response when finished. The default is true.</param>
         /// <returns>Returns a string representing the content of the response.</returns>
-        public static string ResponseToString(HttpWebResponse response, bool disposeResponse = true)
+        public static string ToUTF8(this HttpWebResponse response, bool disposeResponse = true)
         {
-            return Encoding.UTF8.GetString(ResponseToArray(response, disposeResponse));
+            return Encoding.UTF8.GetString(ToArray(response, disposeResponse));
         }
 
         /// <summary>
@@ -687,16 +689,12 @@ namespace GoogleMusic.Net
         /// <param name="progressHandler">Optional. The event handler to invoke when progress has changed.</param>
         /// <param name="completeHandler">Optional. The event handler to invoke when the response has been read.</param>
         /// <returns>Returns a Task object containing a string result representing the content of the response.</returns>
-        public async Task<string> ResponseToStringAsync(HttpWebResponse response, bool disposeResponse = true,
+        public async Task<string> ToUTF8(this HttpWebResponse response, bool disposeResponse = true,
             CancellationToken cancellationToken = default(CancellationToken), TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
         {
-            return Encoding.UTF8.GetString(await ResponseToArrayAsync(response, disposeResponse, cancellationToken, progressHandler, completeHandler));
+            return Encoding.UTF8.GetString(await ToArrayAsync(response, disposeResponse, cancellationToken, progressHandler, completeHandler));
         }
-
-        #endregion
-
     }
-
 
     internal class FormBuilder : IDisposable
     {
