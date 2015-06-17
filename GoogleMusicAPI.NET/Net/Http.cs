@@ -583,14 +583,14 @@ namespace GoogleMusic.Net
         }
 
         /// <summary>
-        /// Reads the content of an HTTP response to a byte array.
+        /// Asynchronously reads the content of an HTTP response to a byte array.
         /// </summary>
         /// <param name="response">Required. The HttpWebResponse object representing the response to read.</param>
         /// <param name="disposeResponse">Optional. A boolean value determining whether to dispose of the response when finished. The default is true.</param>
         /// <param name="cancellationToken">Optional. The token to monitor for cancellation requests.</param>
         /// <param name="progressHandler">Optional. The event handler to invoke when progress has changed.</param>
         /// <param name="completeHandler">Optional. The event handler to invoke when the response has been read.</param>
-        /// <returns>Returns a byte array representing the content of the response.</returns>
+        /// <returns>Returns a Task object containing a byte array result representing the content of the response.</returns>
         public async Task<byte[]> ResponseToArrayAsync(HttpWebResponse response, bool disposeResponse = true,
             CancellationToken cancellationToken = default(CancellationToken), TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
         {
@@ -665,6 +665,32 @@ namespace GoogleMusic.Net
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Reads the content of an HTTP response as a UTF-8 encoded string.
+        /// </summary>
+        /// <param name="response">Required. The HttpWebResponse object representing the response to read.</param>
+        /// <param name="disposeResponse">Optional. A boolean value determining whether to dispose of the response when finished. The default is true.</param>
+        /// <returns>Returns a string representing the content of the response.</returns>
+        public static string ResponseToString(HttpWebResponse response, bool disposeResponse = true)
+        {
+            return Encoding.UTF8.GetString(ResponseToArray(response, disposeResponse));
+        }
+
+        /// <summary>
+        /// Asynchronously reads the content of an HTTP response as a UTF-8 encoded string.
+        /// </summary>
+        /// <param name="response">Required. The HttpWebResponse object representing the response to read.</param>
+        /// <param name="disposeResponse">Optional. A boolean value determining whether to dispose of the response when finished. The default is true.</param>
+        /// <param name="cancellationToken">Optional. The token to monitor for cancellation requests.</param>
+        /// <param name="progressHandler">Optional. The event handler to invoke when progress has changed.</param>
+        /// <param name="completeHandler">Optional. The event handler to invoke when the response has been read.</param>
+        /// <returns>Returns a Task object containing a string result representing the content of the response.</returns>
+        public async Task<string> ResponseToStringAsync(HttpWebResponse response, bool disposeResponse = true,
+            CancellationToken cancellationToken = default(CancellationToken), TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
+        {
+            return Encoding.UTF8.GetString(await ResponseToArrayAsync(response, disposeResponse, cancellationToken, progressHandler, completeHandler));
         }
 
         #endregion
