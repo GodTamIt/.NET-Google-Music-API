@@ -666,6 +666,9 @@ namespace GoogleMusic.Net
                 }
             }
 
+            if (disposeResponse)
+                response.Close();
+
             return result;
         }
 
