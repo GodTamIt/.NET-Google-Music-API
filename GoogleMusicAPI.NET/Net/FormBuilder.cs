@@ -84,14 +84,10 @@ namespace GoogleMusic.Net
             _length += fileStream.Length;
         }
 
-        #endregion
-
-        #region WriteTo
-
         /// <summary>
         /// Adds the appropriate ending data to the form. This must be called before writing the form to ensure it is valid.
         /// </summary>
-        private void AddEnding()
+        public void AddEnding()
         {
             if (streams.Count < 1 || !(streams[streams.Count - 1] is MemoryStream))
                 streams.Add(new MemoryStream());
@@ -102,12 +98,15 @@ namespace GoogleMusic.Net
             _length += sbData.Length;
         }
 
+        #endregion
+
+        #region WriteTo
+
         public void WriteTo(Stream destination, int bufferSize)
         {
-            AddEnding();
-
             foreach (Stream s in streams)
             {
+                s.Position = 0;
                 if (s is MemoryStream)
                 {
                     MemoryStream ms = (MemoryStream)s;
@@ -123,12 +122,12 @@ namespace GoogleMusic.Net
         public async Task WriteToAsync(Stream destination, int bufferSize,
             CancellationToken cancellationToken = default(CancellationToken), TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
         {
-            AddEnding();
-
             byte[] buffer = null;
 
             foreach (Stream currentStream in streams)
             {
+                currentStream.Position = 0;
+
                 if (cancellationToken.IsCancellationRequested)
                     return;
 
@@ -162,7 +161,7 @@ namespace GoogleMusic.Net
                                 progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, totalRead / (double)_length), null, null);
 
                             // WriteTask: Start writing to stream asynchronously
-                            int chunk = Math.Min(buffer.Length - readPosition, bufferSize);
+                            int chunk = (int) Math.Min(memoryStream.Length - readPosition, bufferSize);
                             Task writeTask = destination.WriteAsync(buffer, readPosition, chunk, cancellationToken);
 
                             // ProgressHandler: End asynchronous invoke

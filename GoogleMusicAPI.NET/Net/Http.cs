@@ -354,6 +354,9 @@ namespace GoogleMusic.Net
             request.CookieContainer = _Cookies;
             request.UserAgent = _userAgent;
             request.Pipelined = (_usePipelining && method != "POST" && method != "PUT");
+            request.Timeout = _timeout;
+
+            _lastUrl = url;
 
             return request;
         }
@@ -361,6 +364,16 @@ namespace GoogleMusic.Net
         #endregion
 
         #region Request
+
+        /// <summary>
+        /// Performs a simple HttpWebRequest.
+        /// </summary>
+        /// <param name="request">Required. The HttpWebRequest to represent the request.</param>
+        /// <returns>Returns a HttpWebResponse representing the response from the server.</returns>
+        public HttpWebResponse Request(HttpWebRequest request)
+        {
+            return (HttpWebResponse)request.GetResponse();
+        }
 
         /// <summary>
         /// Performs an HttpWebRequest with request data.
@@ -406,6 +419,16 @@ namespace GoogleMusic.Net
             }
 
             return (HttpWebResponse)request.GetResponse();
+        }
+
+        /// <summary>
+        /// Asynchronously performs a simple HttpWebRequest.
+        /// </summary>
+        /// <param name="request">Required. The HttpWebRequest to represent the request.</param>
+        /// <returns>Returns a HttpWebResponse representing the response from the server.</returns>
+        public async Task<HttpWebResponse> RequestAsync(HttpWebRequest request)
+        {
+            return (HttpWebResponse)(await request.GetResponseAsync());
         }
 
         /// <summary>

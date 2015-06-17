@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 //using wireless_android_skyjam;
-using ProtoBuf;
+//using ProtoBuf;
 
 using GoogleMusic.Clients;
 
@@ -20,8 +20,8 @@ namespace GoogleMusic
     public class API
     {
         #region Members
-        private WebClient _WebClient;
-        private MusicManagerClient _MusicManager;
+        private WebClient _webClient;
+        private MusicManagerClient _musicManager;
         #endregion
 
         #region Constructor
@@ -32,8 +32,8 @@ namespace GoogleMusic
         /// <param name="clientSecret">The secret string of the program given by Google.</param>
         public API(string clientId, string clientSecret)
         {
-            _WebClient = new WebClient();
-            _MusicManager = new MusicManagerClient(clientId, clientSecret);
+            _webClient = new WebClient();
+            _musicManager = new MusicManagerClient(clientId, clientSecret);
         }
 
         #endregion
@@ -45,8 +45,8 @@ namespace GoogleMusic
         /// </summary>
         public WebClient WebClient
         {
-            get { return _WebClient; }
-            set { _WebClient = value; }
+            get { return _webClient; }
+            set { _webClient = value; }
         }
 
         /// <summary>
@@ -54,8 +54,8 @@ namespace GoogleMusic
         /// </summary>
         public MusicManagerClient MusicManager
         {
-            get { return _MusicManager; }
-            set { _MusicManager = value; }
+            get { return _musicManager; }
+            set { _musicManager = value; }
         }
 
         /// <summary>
@@ -64,8 +64,8 @@ namespace GoogleMusic
         /// <exception cref="System.ArgumentException">Thrown when property is set to empty string or null.</exception>
         public string ClientId
         {
-            get { return _MusicManager.ClientId; }
-            set { _MusicManager.ClientId = value; }
+            get { return _musicManager.ClientId; }
+            set { _musicManager.ClientId = value; }
         }
 
         /// <summary>
@@ -73,14 +73,13 @@ namespace GoogleMusic
         /// </summary>
         public string ClientSecret
         {
-            get { return _MusicManager.ClientSecret; }
-            set { _MusicManager.ClientSecret = value; }
+            get { return _musicManager.ClientSecret; }
+            set { _musicManager.ClientSecret = value; }
         }
 
         /// <summary>
         /// Returns the current version of the plugin.
         /// </summary>
-        /// <exception cref="System.ArgumentException">Thrown when property is set to empty string or null.</exception>
         public string Version
         {
             get
@@ -106,13 +105,12 @@ namespace GoogleMusic
         {
             try
             {
-                bool webResult = _WebClient.Login(email, password);
+                Result<bool> webResult = _webClient.Login(email, password);
 
-                _MusicManager.GetRefreshToken(authorizationCode);
-                _MusicManager.RenewAccessToken();
+                var result1 = _musicManager.GetRefreshToken(authorizationCode);
+                var result2 = _musicManager.RenewAccessToken();
 
-
-                return (webResult && !String.IsNullOrEmpty(_MusicManager.AccessToken));
+                return (webResult.Success && !String.IsNullOrEmpty(_musicManager.AccessToken));
             }
             catch (Exception)
             {
@@ -131,14 +129,14 @@ namespace GoogleMusic
         {
             try
             {
-                Task<bool> webLogin = _WebClient.LoginAsync(email, password);
+                Task<Result<bool>> webLogin = _webClient.LoginAsync(email, password);
 
-                await _MusicManager.GetRefreshTokenAsync(authorizationCode);
-                await _MusicManager.RenewAccessTokenAsync();
+                var result1 = await _musicManager.GetRefreshTokenAsync(authorizationCode);
+                var result2 = await _musicManager.RenewAccessTokenAsync();
 
-                bool webResult = await webLogin;
-
-                return (webResult && !String.IsNullOrEmpty(_MusicManager.AccessToken));
+                Result<bool> webResult = await webLogin;
+                
+                return (webResult.Success && !String.IsNullOrEmpty(_musicManager.AccessToken));
             }
             catch (Exception)
             {
@@ -151,8 +149,8 @@ namespace GoogleMusic
         /// </summary>
         public void Logout()
         {
-            _WebClient.Logout();
-            _MusicManager.Logout();
+            _webClient.Logout();
+            _musicManager.Logout();
         }
 
         #endregion

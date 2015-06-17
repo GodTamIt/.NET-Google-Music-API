@@ -19,11 +19,11 @@ namespace GoogleMusic.Clients
         #region Members
         private const string USER_AGENT = "Music Manager (1, 0, 55, 7425 HTTPS - Windows)";
 
-        private string _ClientId;
-        private string _ClientSecret;
-        private string _AuthorizationCode;
-        private string _RefreshToken;
-        private string _AccessToken;
+        private string _clientId;
+        private string _clientSecret;
+        private string _authorizationCode;
+        private string _refreshToken;
+        private string _accessToken;
 
         private Http http;
         #endregion
@@ -52,7 +52,7 @@ namespace GoogleMusic.Clients
 
         public bool IsLoggedIn
         {
-            get { return !(String.IsNullOrEmpty(_AccessToken) || String.IsNullOrEmpty(_RefreshToken) || String.IsNullOrEmpty(_AuthorizationCode)); }
+            get { return !(String.IsNullOrEmpty(_accessToken) || String.IsNullOrEmpty(_refreshToken) || String.IsNullOrEmpty(_authorizationCode)); }
         }
 
         /// <summary>
@@ -61,13 +61,13 @@ namespace GoogleMusic.Clients
         /// <exception cref="System.ArgumentException">Thrown when property is set to empty string or null.</exception>
         public string ClientId
         {
-            get { return _ClientId; }
+            get { return _clientId; }
             set
             {
                 if (String.IsNullOrEmpty(value))
                     throw new ArgumentException("ClientId cannot be null or empty.", "value");
 
-                _ClientId = value;
+                _clientId = value;
             }
         }
 
@@ -77,13 +77,13 @@ namespace GoogleMusic.Clients
         /// <exception cref="System.ArgumentException">Thrown when property is set to empty string or null.</exception>
         public string ClientSecret
         {
-            get { return _ClientSecret; }
+            get { return _clientSecret; }
             set
             {
                 if (String.IsNullOrEmpty(value))
                     throw new ArgumentException("ClientSecret cannot be null or empty.", "value");
 
-                _ClientSecret = value;
+                _clientSecret = value;
             }
         }
 
@@ -92,8 +92,8 @@ namespace GoogleMusic.Clients
         /// </summary>
         public string AuthorizationCode
         {
-            get { return _AuthorizationCode; }
-            set { _AuthorizationCode = value; }
+            get { return _authorizationCode; }
+            set { _authorizationCode = value; }
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace GoogleMusic.Clients
         /// </summary>
         public string RefreshToken
         {
-            get { return _RefreshToken; }
+            get { return _refreshToken; }
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace GoogleMusic.Clients
         /// </summary>
         public string AccessToken
         {
-            get { return _AccessToken; }
+            get { return _accessToken; }
         }
 
         #endregion
@@ -122,7 +122,7 @@ namespace GoogleMusic.Clients
         /// <returns>Returns the URL calculated.</returns>
         public string GetAuthorizationCodeUrl()
         {
-            string encodedClientId = System.Web.HttpUtility.UrlEncode(_ClientId, Encoding.GetEncoding("ISO-8859-1"));
+            string encodedClientId = System.Web.HttpUtility.UrlEncode(_clientId, Encoding.GetEncoding("ISO-8859-1"));
             string encodedScope = System.Web.HttpUtility.UrlEncode("https://www.googleapis.com/auth/musicmanager", Encoding.GetEncoding("ISO-8859-1"));
 
             return String.Format("https://accounts.google.com/o/oauth2/auth?response_type=code&client_id={0}&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope={1}",
@@ -136,26 +136,29 @@ namespace GoogleMusic.Clients
         /// <returns>Returns the result from Google's servers.</returns>
         public Result<string> GetRefreshToken(string authorizationCode)
         {
-            _AuthorizationCode = authorizationCode;
+            _authorizationCode = authorizationCode;
 
             try
             {
                 HttpWebResponse response;
                 using (FormBuilder form = new FormBuilder())
                 {
-                    form.AddField("code", ClientId);
+                    form.AddField("code", authorizationCode);
+                    form.AddField("client_id", ClientId);
                     form.AddField("client_secret", ClientSecret);
                     form.AddField("redirect_uri", "urn:ietf:wg:oauth:2.0:oob");
                     form.AddField("grant_type", "authorization_code");
+                    form.AddEnding();
 
-                    response = http.Request(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form);
+                    HttpWebRequest request = SetupWebRequest("https://accounts.google.com/o/oauth2/token", "POST");
+                    response = http.Request(request, form);
                 }
 
                 // Bytes -> String -> JSON
                 Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(response.ToUTF8());
 
-                _RefreshToken = json["refresh_token"];
-                return new Result<string>(true, _RefreshToken, this);
+                _refreshToken = json["refresh_token"];
+                return new Result<string>(true, _refreshToken, this);
             }
             catch (WebException e)
             {
@@ -180,19 +183,21 @@ namespace GoogleMusic.Clients
         /// <returns>Returns a task the result from Google's servers.</returns>
         public async Task<Result<string>> GetRefreshTokenAsync(string authorizationCode, CancellationToken cancellationToken = default(CancellationToken))
         {
-            _AuthorizationCode = authorizationCode;           
+            _authorizationCode = authorizationCode;           
             
             try
             {
                 HttpWebResponse response;
                 using (FormBuilder form = new FormBuilder())
                 {
-                    form.AddField("code", ClientId);
+                    form.AddField("code", authorizationCode);
+                    form.AddField("client_id", ClientId);
                     form.AddField("client_secret", ClientSecret);
                     form.AddField("redirect_uri", "urn:ietf:wg:oauth:2.0:oob");
                     form.AddField("grant_type", "authorization_code");
+                    form.AddEnding();
 
-                    response = await http.RequestAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form, cancellationToken);
+                    response = await http.RequestAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token", "POST"), form, cancellationToken);
                 }
 
                 if (cancellationToken.IsCancellationRequested)
@@ -204,8 +209,8 @@ namespace GoogleMusic.Clients
                 if (cancellationToken.IsCancellationRequested)
                     return null;
 
-                _RefreshToken = json["refresh_token"];
-                return new Result<string>(true, _RefreshToken, this);
+                _refreshToken = json["refresh_token"];
+                return new Result<string>(true, _refreshToken, this);
             }
             catch (WebException e)
             {
@@ -239,15 +244,16 @@ namespace GoogleMusic.Clients
                     form.AddField("client_id", ClientId);
                     form.AddField("client_secret", ClientSecret);
                     form.AddField("grant_type", "refresh_token");
+                    form.AddEnding();
 
-                    response = http.Request(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form);
+                    response = http.Request(SetupWebRequest("https://accounts.google.com/o/oauth2/token", "POST"), form);
                 }
 
                 // Bytes -> String -> JSON
                 Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(response.ToUTF8());
 
-                _AccessToken = json["access_token"];
-                return new Result<string>(true, _AccessToken, this);
+                _accessToken = json["access_token"];
+                return new Result<string>(true, _accessToken, this);
             }
             catch (WebException e)
             {
@@ -282,8 +288,9 @@ namespace GoogleMusic.Clients
                     form.AddField("client_id", ClientId);
                     form.AddField("client_secret", ClientSecret);
                     form.AddField("grant_type", "refresh_token");
+                    form.AddEnding();
 
-                    response = await http.RequestAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token"), form, cancellationToken);
+                    response = await http.RequestAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token", "POST"), form, cancellationToken);
                 }
 
                 if (cancellationToken.IsCancellationRequested)
@@ -295,8 +302,8 @@ namespace GoogleMusic.Clients
                 if (cancellationToken.IsCancellationRequested)
                     return null;
 
-                _AccessToken = json["access_token"];
-                return new Result<string>(true, _AccessToken, this);
+                _accessToken = json["access_token"];
+                return new Result<string>(true, _accessToken, this);
             }
             catch (WebException e)
             {
@@ -317,21 +324,21 @@ namespace GoogleMusic.Clients
         /// </summary>
         public void Logout()
         {
-            _AuthorizationCode = String.Empty;
-            _RefreshToken = String.Empty;
-            _AccessToken = String.Empty;
+            _authorizationCode = String.Empty;
+            _refreshToken = String.Empty;
+            _accessToken = String.Empty;
         }
 
         #endregion
 
         #region Web
 
-        private HttpWebRequest SetupWebRequest(string address)
+        private HttpWebRequest SetupWebRequest(string address, string method = "GET")
         {
-            HttpWebRequest request = http.CreateRequest(address);
+            HttpWebRequest request = http.CreateRequest(address, method);
 
-            if (_AccessToken != null)
-                request.Headers[HttpRequestHeader.Authorization] = "Bearer " + _AccessToken;
+            if (_accessToken != null)
+                request.Headers[HttpRequestHeader.Authorization] = "Bearer " + _accessToken;
             
             return request;
         }
