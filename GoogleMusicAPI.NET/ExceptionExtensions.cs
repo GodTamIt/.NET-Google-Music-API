@@ -9,7 +9,7 @@ namespace GoogleMusic
     /// <summary>
     /// Formats exceptions into human-readable formats.
     /// </summary>
-    internal static class ExceptionWriter
+    internal static class ExceptionExtensions
     {
         public static string ToString(this System.Net.WebException ex, string message)
         {
