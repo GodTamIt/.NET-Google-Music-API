@@ -21,16 +21,15 @@ namespace GoogleMusic.Net
     internal class Http
     {
         #region Members
-        private DecompressionMethods _DecompressionMethod = DecompressionMethods.GZip;
-        private int _Timeout = 10000;
-        private string _UserAgent = "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.124 Safari/537.36";
-        private string _LastUrl = "http://www.google.com/";
-        private bool _UseProxy = false;
-        private WebProxy _Proxy;
-        private bool _UsePipelining = false;
-        private Encoding _Encoding = Encoding.UTF8;
-        private int _BufferSize = 8192;
-        private HttpRequestCacheLevel _CachingPolicy = HttpRequestCacheLevel.Revalidate;
+        private DecompressionMethods _decompressionMethod = DecompressionMethods.GZip;
+        private int _timeout = 10000;
+        private string _userAgent = "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.124 Safari/537.36";
+        private string _lastUrl = "http://www.google.com/";
+        private bool _useProxy = false;
+        private WebProxy _proxy;
+        private bool _usePipelining = false;
+        private Encoding _encoding = Encoding.UTF8;
+        private HttpRequestCacheLevel _cachingPolicy = HttpRequestCacheLevel.Revalidate;
 
 
         private CookieContainer _Cookies = new CookieContainer();
@@ -43,8 +42,8 @@ namespace GoogleMusic.Net
         /// </summary>
         public bool UseProxy
         {
-            get { return _UseProxy; }
-            set { _UseProxy = value; }
+            get { return _useProxy; }
+            set { _useProxy = value; }
         }
 
         /// <summary>
@@ -52,8 +51,8 @@ namespace GoogleMusic.Net
         /// </summary>
         public WebProxy Proxy
         {
-            get { return _Proxy; }
-            set { _Proxy = value; }
+            get { return _proxy; }
+            set { _proxy = value; }
         }
 
         /// <summary>
@@ -61,7 +60,7 @@ namespace GoogleMusic.Net
         /// </summary>
         public string LastUrl
         {
-            get { return _LastUrl; }
+            get { return _lastUrl; }
         }
 
         /// <summary>
@@ -69,8 +68,8 @@ namespace GoogleMusic.Net
         /// </summary>
         public string UserAgent
         {
-            get { return _UserAgent; }
-            set { _UserAgent = value; }
+            get { return _userAgent; }
+            set { _userAgent = value; }
         }
 
         /// <summary>
@@ -78,8 +77,8 @@ namespace GoogleMusic.Net
         /// </summary>
         public int Timeout
         {
-            get { return _Timeout; }
-            set { _Timeout = Math.Abs(value); }
+            get { return _timeout; }
+            set { _timeout = Math.Abs(value); }
         }
 
         /// <summary>
@@ -87,8 +86,8 @@ namespace GoogleMusic.Net
         /// </summary>
         public DecompressionMethods DecompressionMethod
         {
-            get { return _DecompressionMethod; }
-            set { _DecompressionMethod = value; }
+            get { return _decompressionMethod; }
+            set { _decompressionMethod = value; }
         }
 
         /// <summary>
@@ -96,8 +95,8 @@ namespace GoogleMusic.Net
         /// </summary>
         public bool UsePipelining
         {
-            get { return _UsePipelining; }
-            set { _UsePipelining = value; }
+            get { return _usePipelining; }
+            set { _usePipelining = value; }
         }
 
         /// <summary>
@@ -114,17 +113,8 @@ namespace GoogleMusic.Net
         /// </summary>
         public Encoding Encoding
         {
-            get { return _Encoding; }
-            set { _Encoding = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the buffer size to use when reading streams.
-        /// </summary>
-        public int BufferSize
-        {
-            get { return _BufferSize; }
-            set { _BufferSize = value; }
+            get { return _encoding; }
+            set { _encoding = value; }
         }
 
         /// <summary>
@@ -132,8 +122,8 @@ namespace GoogleMusic.Net
         /// </summary>
         public HttpRequestCacheLevel CachingPolicy
         {
-            get { return _CachingPolicy; }
-            set { _CachingPolicy = value; }
+            get { return _cachingPolicy; }
+            set { _cachingPolicy = value; }
         }
 
         #endregion
@@ -355,15 +345,15 @@ namespace GoogleMusic.Net
 
             request = (HttpWebRequest)HttpWebRequest.Create(url);
             request.Method = method;
-            request.Proxy = (_UseProxy ? _Proxy : null);
-            request.AutomaticDecompression = _DecompressionMethod;
+            request.Proxy = (_useProxy ? _proxy : null);
+            request.AutomaticDecompression = _decompressionMethod;
 
-            request.CachePolicy = new HttpRequestCachePolicy(_CachingPolicy);
+            request.CachePolicy = new HttpRequestCachePolicy(_cachingPolicy);
             request.Accept = accept;
             request.Referer = referer;
             request.CookieContainer = _Cookies;
-            request.UserAgent = _UserAgent;
-            request.Pipelined = (_UsePipelining && method != "POST" && method != "PUT");
+            request.UserAgent = _userAgent;
+            request.Pipelined = (_usePipelining && method != "POST" && method != "PUT");
 
             return request;
         }
@@ -401,10 +391,12 @@ namespace GoogleMusic.Net
         /// <param name="request">Required. The HttpWebRequest to represent the base request.</param>
         /// <param name="contentType">Required. The Content-Type HTTP header to send with the request.</param>
         /// <param name="data">Required. A byte array representing the request data to send with the request.</param>
+        /// <param name="cancellationToken">Optional. The token to monitor for cancellation requests.</param>
         /// <param name="progressHandler">Optional. The event handler to invoke when progress has changed.</param>
         /// <param name="completeHandler">Optional. The event handler to invoke when the request has finished.</param>
         /// <returns>Returns a HttpWebResponse representing the response from the server.</returns>
-        public async Task<HttpWebResponse> RequestAsync(HttpWebRequest request, string contentType, byte[] data, TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
+        public async Task<HttpWebResponse> RequestAsync(HttpWebRequest request, string contentType, byte[] data,
+            CancellationToken cancellationToken = default(CancellationToken), TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
         {
             request.ContentLength = (data != null) ? data.Length : 0;
 
@@ -414,35 +406,27 @@ namespace GoogleMusic.Net
             // Write to upload stream
             using (Stream uploadStream = await request.GetRequestStreamAsync())
             {
-                using (MemoryStream ms = new MemoryStream(data))
+                int bufferSize = GetOptimalBufferSize(data.Length);
+                int bytesDone = new int();
+
+                while (bytesDone < data.Length)
                 {
-                    // Make buffer either the buffer size or smaller if the data is small
-                    byte[] buffer = new byte[Math.Min(_BufferSize, data.Length)];
-                    long bytesRead = 0;
-                    int chunkRead;
+                    // ProgressHandler: Begin asynchronous invoke
+                    IAsyncResult progressHandlerResult = null;
+                    if (progressHandler != null)
+                        progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesDone / (double)data.Length), null, null);
 
-                    while ((chunkRead = await ms.ReadAsync(buffer, 0, buffer.Length)) > 0)
-                    {
-                        // Start writing to stream asynchronously
-                        Task writeTask = uploadStream.WriteAsync(buffer, 0, chunkRead);
+                    // WriteTask: Start writing to stream asynchronously
+                    int nextChunkSize = Math.Min(data.Length - bytesDone, bufferSize);
+                    Task writeTask = uploadStream.WriteAsync(data, bytesDone, nextChunkSize, cancellationToken);                    
 
-                        // Calculate bytes
-                        bytesRead += chunkRead;
+                    // End asynchronous ProgressHandler
+                    if (progressHandler != null && progressHandlerResult != null)
+                        progressHandler.EndInvoke(progressHandlerResult);
 
-                        // ProgressHandler: Begin asynchronous invoke
-                        IAsyncResult progressHandlerResult = null;
-                        if (progressHandler != null)
-                            progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, bytesRead / ms.Length), null, null);
-
-                        // Wait for chunk upload to finish
-                        await writeTask;
-
-                        // End asynchronous ProgressHandler
-                        if (progressHandler != null && progressHandlerResult != null)
-                            progressHandler.EndInvoke(progressHandlerResult);
-                    }
-                    // No progress update version:
-                    //await ms.CopyToAsync(uploadStream, _BufferSize);
+                    // WriteTask: Wait for chunk upload to finish
+                    await writeTask;
+                    bytesDone += nextChunkSize;
                 }
             }
 
@@ -469,11 +453,11 @@ namespace GoogleMusic.Net
         }
 
         /// <summary>
-        /// Calculates an optimal buffer size given a content length
+        /// Looks up an optimal buffer size given a content length. Attempts to balance memory usage, performance, and progress reporting reponsiveness.
         /// </summary>
         /// <param name="contentLength">Required. The size, in bytes, of the content being buffered.</param>
         /// <returns>Returns a 32-bit signed integer representing a suggested buffer size.</returns>
-        internal int CalculateOptimalBufferSize(long contentLength)
+        static internal int GetOptimalBufferSize(long contentLength)
         {
             if (contentLength < 0L)
                 return 65536; // Default 60 KB
@@ -499,19 +483,34 @@ namespace GoogleMusic.Net
         /// <param name="response">Required. The HttpWebResponse object representing the response to read.</param>
         /// <param name="disposeResponse">Optional. A boolean value determining whether to dispose of the response when finished. The default is true.</param>
         /// <returns>Returns a byte array representing the content of the response.</returns>
-        public byte[] ResponseToArray(HttpWebResponse response, bool disposeResponse = true)
+        public static byte[] ResponseToArray(HttpWebResponse response, bool disposeResponse = true)
         {
-            using (MemoryStream memory = new MemoryStream())
+            byte[] result;
+            if (response.ContentLength > 0)
             {
+                result = new byte[response.ContentLength];
                 using (Stream responseStream = response.GetResponseStream())
                 {
-                    responseStream.CopyTo(memory, _BufferSize);
-                    if (disposeResponse)
-                        response.Close();
-
-                    return memory.ToArray();
+                    responseStream.Read(result, 0, result.Length);
                 }
             }
+            else
+            {
+                using (MemoryStream memoryStream = new MemoryStream())
+                {
+                    using (Stream responseStream = response.GetResponseStream())
+                    {
+                        responseStream.CopyTo(memoryStream, GetOptimalBufferSize(-1));
+                    }
+                    result = memoryStream.ToArray();
+                }
+            }
+            
+
+            if (disposeResponse)
+                response.Close();
+
+            return result;
         }
 
         /// <summary>
@@ -519,50 +518,84 @@ namespace GoogleMusic.Net
         /// </summary>
         /// <param name="response">Required. The HttpWebResponse object representing the response to read.</param>
         /// <param name="disposeResponse">Optional. A boolean value determining whether to dispose of the response when finished. The default is true.</param>
+        /// <param name="cancellationToken">Optional. The token to monitor for cancellation requests.</param>
         /// <param name="progressHandler">Optional. The event handler to invoke when progress has changed.</param>
         /// <param name="completeHandler">Optional. The event handler to invoke when the response has been read.</param>
         /// <returns>Returns a byte array representing the content of the response.</returns>
-        public async Task<byte[]> ResponseToArrayAsync(HttpWebResponse response, bool disposeResponse = true, TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
+        public async Task<byte[]> ResponseToArrayAsync(HttpWebResponse response, bool disposeResponse = true,
+            CancellationToken cancellationToken = default(CancellationToken), TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
         {
-            using (MemoryStream memory = new MemoryStream())
+            byte[] result;
+            if (response.ContentLength > 0)
             {
+                long contentLength = response.ContentLength;
+                result = new byte[contentLength];
+                int bufferSize = GetOptimalBufferSize(contentLength);
+
                 using (Stream responseStream = response.GetResponseStream())
                 {
-                    byte[] buffer = new byte[_BufferSize];
                     long bytesRead = 0;
-                    int chunkRead;
 
-                    while ((chunkRead = await responseStream.ReadAsync(buffer, 0, _BufferSize)) > 0)
+                    // ReadTask: Start reading before first iteration.
+                    int chunkRead = await responseStream.ReadAsync(result, 0, (int)Math.Min(contentLength - bytesRead, bufferSize));
+                    bytesRead += chunkRead;
+
+                    while (bytesRead < contentLength && chunkRead > 0)
                     {
-                        // Start writing to memory asynchronously
-                        Task readTask = memory.WriteAsync(buffer, 0, _BufferSize);
-
-                        // Calculate bytes
-                        bytesRead += chunkRead;
-
                         // ProgressHandler: Begin asynchronous invoke
                         IAsyncResult progressHandlerResult = null;
-                        if (progressHandler != null && response.ContentLength > 0)
-                            progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, bytesRead / response.ContentLength), null, null);
+                        if (progressHandler != null)
+                            progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesRead / (double)contentLength), null, null);
 
-                        // Wait for chunk upload to finish
-                        await readTask;
+                        // ReadTask: Start another read asynchronously
+                        Task<int> readTask = responseStream.ReadAsync(result, 0, (int)Math.Min(contentLength - bytesRead, bufferSize));
 
-                        // End asynchronous ProgressHandler
+                        // ProgressHandler: End asynchronous invoke
                         if (progressHandler != null && progressHandlerResult != null)
                             progressHandler.EndInvoke(progressHandlerResult);
+
+                        // WriteTask: Wait for chunk to finish
+                        chunkRead = await readTask;
+                        bytesRead += chunkRead;
                     }
                 }
-
-                if (disposeResponse)
-                    response.Close();
-
-                // Invoke 
-                if (completeHandler != null)
-                    completeHandler.Invoke();
-
-                return memory.ToArray();
             }
+            else
+            {
+                int bufferSize = GetOptimalBufferSize(-1);
+                using (MemoryStream memory = new MemoryStream(bufferSize))
+                {
+                    using (Stream responseStream = response.GetResponseStream())
+                    {
+                        byte[] buffer = new byte[bufferSize];
+                        long bytesRead = 0;
+                        int chunkRead;
+
+                        while ((chunkRead = await responseStream.ReadAsync(buffer, 0, bufferSize)) > 0)
+                        {
+                            // ProgressHandler: Begin asynchronous invoke
+                            IAsyncResult progressHandlerResult = null;
+                            if (progressHandler != null && response.ContentLength > 0)
+                                progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesRead / (double)response.ContentLength), null, null);
+
+                            // WriteTask: Start writing to memory asynchronously
+                            Task writeTask = memory.WriteAsync(buffer, 0, chunkRead);                          
+
+                            // End asynchronous ProgressHandler
+                            if (progressHandler != null && progressHandlerResult != null)
+                                progressHandler.EndInvoke(progressHandlerResult);
+
+                            // WriteTask: Wait for chunk to finish
+                            await writeTask;
+                            bytesRead += chunkRead;
+                        }
+                    }
+
+                    result = memory.ToArray();
+                }
+            }
+
+            return result;
         }
 
         #endregion
@@ -576,7 +609,7 @@ namespace GoogleMusic.Net
         private string boundary = "----------" + DateTime.Now.Ticks.ToString("x");
         private List<Stream> streams = new List<Stream>();
 
-        private long _Length = new long();
+        private long _length = new long();
         #endregion
 
         #region Properties
@@ -596,8 +629,8 @@ namespace GoogleMusic.Net
 
         public long Length
         {
-            get { return _Length; }
-            set { _Length = value; }
+            get { return _length; }
+            set { _length = value; }
         }
 
         #endregion
@@ -617,7 +650,7 @@ namespace GoogleMusic.Net
             byte[] sbData = Encoding.UTF8.GetBytes(sb.ToString());
 
             streams[streams.Count - 1].Write(sbData, 0, sbData.Length);
-            _Length += sbData.Length;
+            _length += sbData.Length;
         }
 
         public void AddFields(Dictionary<string, string> fields)
@@ -640,18 +673,34 @@ namespace GoogleMusic.Net
 
             byte[] sbData = Encoding.UTF8.GetBytes(sb.ToString());
             streams[streams.Count - 1].Write(sbData, 0, sbData.Length);
-            _Length += sbData.Length;
+            _length += sbData.Length;
 
             streams.Add(fileStream);
-            _Length += fileStream.Length;
+            _length += fileStream.Length;
         }
 
         #endregion
 
         #region WriteTo
 
+        /// <summary>
+        /// Adds the appropriate ending data to the form. This must be called before writing the form to ensure it is valid.
+        /// </summary>
+        private void AddEnding()
+        {
+            if (streams.Count < 1 || !(streams[streams.Count - 1] is MemoryStream))
+                streams.Add(new MemoryStream());
+
+            byte[] sbData = Encoding.UTF8.GetBytes("\r\n--" + boundary + "--\r\n");
+
+            streams[streams.Count - 1].Write(sbData, 0, sbData.Length);
+            _length += sbData.Length;
+        }
+
         public void WriteTo(Stream destination, int bufferSize)
         {
+            AddEnding();
+
             foreach (Stream s in streams)
             {
                 if (s is MemoryStream)
@@ -666,10 +715,90 @@ namespace GoogleMusic.Net
             }
         }
 
-        public void WriteToAsync(Stream destination, int bufferSize,
+        public async Task WriteToAsync(Stream destination, int bufferSize,
             CancellationToken cancellationToken = default(CancellationToken), TaskProgressEventHandler progressHandler = null, TaskCompleteEventHandler completeHandler = null)
         {
+            AddEnding();
 
+            byte[] buffer = null;
+
+            foreach (Stream currentStream in streams)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
+                // Purely for progress purposes
+                double totalRead = new double();
+                
+                if (currentStream is MemoryStream)
+                {
+                    // MemoryStream: Get underlying buffer
+                    MemoryStream memoryStream = (MemoryStream)currentStream;
+
+                    // MemoryStream: Check if underlying buffer is valid
+                    bool bufferValid = false;
+                    try
+                    {
+                        buffer = memoryStream.GetBuffer();
+                        bufferValid = buffer != null;
+                    }
+                    catch (Exception) { }
+
+                    if (bufferValid)
+                    {
+                        // MemoryStream Buffer: Buffer is valid and can be used
+                        int readPosition = new int();
+
+                        while (readPosition < memoryStream.Length && !cancellationToken.IsCancellationRequested)
+                        {
+                            // ProgressHandler: Begin asynchronous invoke
+                            IAsyncResult progressHandlerResult = null;
+                            if (progressHandler != null)
+                                progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, totalRead / (double)_length), null, null);
+
+                            // WriteTask: Start writing to stream asynchronously
+                            int chunk = Math.Min(buffer.Length - readPosition, bufferSize);
+                            Task writeTask = destination.WriteAsync(buffer, readPosition, chunk, cancellationToken);
+
+                            // ProgressHandler: End asynchronous invoke
+                            if (progressHandler != null && progressHandlerResult != null)
+                                progressHandler.EndInvoke(progressHandlerResult);
+
+                            // WriteTask: Wait for chunk upload to finish
+                            await writeTask;
+                            totalRead += chunk;
+                            readPosition += chunk;
+                        }
+                        // Go onto next stream
+                        continue;
+                    }
+
+                    // MemoryStream Buffer: Buffer was not valid - fall through to next case
+                }
+
+                if (buffer == null || buffer.Length < bufferSize)
+                    buffer = new byte[bufferSize];
+
+                int chunkRead;
+                while ((chunkRead = await currentStream.ReadAsync(buffer, 0, bufferSize)) > 0 && !cancellationToken.IsCancellationRequested)
+                {
+                    // ProgressHandler: Begin asynchronous invoke
+                    IAsyncResult progressHandlerResult = null;
+                    if (progressHandler != null)
+                        progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)totalRead / (double)_length), null, null);
+
+                    // WriteTask: Start writing to stream asynchronously
+                    Task writeTask = destination.WriteAsync(buffer, 0, chunkRead, cancellationToken);
+
+                    // ProgressHandler: End asynchronous invoke
+                    if (progressHandler != null && progressHandlerResult != null)
+                        progressHandler.EndInvoke(progressHandlerResult);
+
+                    // WriteTask: Wait for write to finish
+                    await writeTask;
+                    totalRead += chunkRead;
+                }
+            }
         }
 
         #endregion
