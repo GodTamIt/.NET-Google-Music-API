@@ -21,18 +21,26 @@ namespace GoogleMusic.Net
     internal class Http
     {
         #region Members
-        private DecompressionMethods _decompressionMethod = DecompressionMethods.GZip;
-        private int _timeout = 10000;
-        private string _userAgent = "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.124 Safari/537.36";
-        private string _lastUrl = "http://www.google.com/";
-        private bool _useProxy = false;
-        private WebProxy _proxy;
-        private bool _usePipelining = false;
-        private Encoding _encoding = Encoding.UTF8;
-        private HttpRequestCacheLevel _cachingPolicy = HttpRequestCacheLevel.Revalidate;
+        public const string GET = "GET";
+        public const string POST = "POST";
+        public const string HEAD = "HEAD";
+        public const string PUT = "PUT";
+        public const string DELETE = "DELETE";
+        #endregion
 
+        #region Constructor
 
-        private CookieContainer _Cookies = new CookieContainer();
+        public Http()
+        {
+            this.Timeout = 20000;
+            this.DecompressionMethod = DecompressionMethods.GZip;
+            this.UserAgent = "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.124 Safari/537.36";
+            this.UseProxy = false;
+            this.UsePipelining = false;
+            this.CachingPolicy = HttpRequestCacheLevel.Revalidate;
+            this.Cookies = new CookieContainer();
+        }
+
         #endregion
 
         #region Properties
@@ -40,91 +48,47 @@ namespace GoogleMusic.Net
         /// <summary>
         /// Gets or sets a value that indicates whether to use a proxy.
         /// </summary>
-        public bool UseProxy
-        {
-            get { return _useProxy; }
-            set { _useProxy = value; }
-        }
+        public bool UseProxy { get; set; }
 
         /// <summary>
         /// Gets or sets the proxy to use if UseProxy is true.
         /// </summary>
-        public WebProxy Proxy
-        {
-            get { return _proxy; }
-            set { _proxy = value; }
-        }
+        public WebProxy Proxy { get; set; }
 
         /// <summary>
         /// Returns a value that represents the last requested URL. This property is read-only.
         /// </summary>
-        public string LastUrl
-        {
-            get { return _lastUrl; }
-        }
+        public string LastUrl { get; protected set; }
 
         /// <summary>
         /// Gets or sets the useragent being imitated.
         /// </summary>
-        public string UserAgent
-        {
-            get { return _userAgent; }
-            set { _userAgent = value; }
-        }
+        public string UserAgent { get; set; }
 
         /// <summary>
         /// Gets or sets a value in milliseconds that indicates the time after initiating a request to wait before timing out.
         /// </summary>
-        public int Timeout
-        {
-            get { return _timeout; }
-            set { _timeout = Math.Abs(value); }
-        }
+        public int Timeout { get; set; }
 
         /// <summary>
         /// Gets or sets the decompression method to use. GZip is default.
         /// </summary>
-        public DecompressionMethods DecompressionMethod
-        {
-            get { return _decompressionMethod; }
-            set { _decompressionMethod = value; }
-        }
+        public DecompressionMethods DecompressionMethod { get; set; }
 
         /// <summary>
         /// Gets or sets a value that indicates whether to pipeline to each request.
         /// </summary>
-        public bool UsePipelining
-        {
-            get { return _usePipelining; }
-            set { _usePipelining = value; }
-        }
+        public bool UsePipelining { get; set; }
 
         /// <summary>
         /// Gets or sets the cookies to use.
         /// </summary>
-        public CookieContainer Cookies
-        {
-            get { return _Cookies; }
-            set { _Cookies = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the encoding to use.
-        /// </summary>
-        public Encoding Encoding
-        {
-            get { return _encoding; }
-            set { _encoding = value; }
-        }
+        public CookieContainer Cookies { get; set; }
 
         /// <summary>
         /// Gets or sets the caching policy.
         /// </summary>
-        public HttpRequestCacheLevel CachingPolicy
-        {
-            get { return _cachingPolicy; }
-            set { _cachingPolicy = value; }
-        }
+        public HttpRequestCacheLevel CachingPolicy { get; set; }
 
         #endregion
 
@@ -135,7 +99,7 @@ namespace GoogleMusic.Net
         /// </summary>
         public void ClearCookies()
         {
-            _Cookies = new CookieContainer();
+            this.Cookies = new CookieContainer();
         }
 
 
@@ -147,7 +111,7 @@ namespace GoogleMusic.Net
         {
             try
             {
-                CookieCollection CC = _Cookies.GetCookies(new Uri(URL));
+                CookieCollection CC = this.Cookies.GetCookies(new Uri(URL));
                 foreach (Cookie Cookie in CC)
                 {
                     Cookie.Expired = true;
@@ -166,7 +130,7 @@ namespace GoogleMusic.Net
         public CookieCollection GetAllCookies()
         {
             CookieCollection lstCookies = new CookieCollection();
-            Hashtable table = (Hashtable)_Cookies.GetType().InvokeMember("m_domainTable", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.GetField | System.Reflection.BindingFlags.Instance, null, _Cookies, new object[] { });
+            Hashtable table = (Hashtable)this.Cookies.GetType().InvokeMember("m_domainTable", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.GetField | System.Reflection.BindingFlags.Instance, null, this.Cookies, new object[] { });
             foreach (object pathList in table.Values)
             {
                 SortedList lstCookieCol = (SortedList)pathList.GetType().InvokeMember("m_list", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.GetField | System.Reflection.BindingFlags.Instance, null, pathList, new object[] { });
@@ -189,7 +153,7 @@ namespace GoogleMusic.Net
         {
             try
             {
-                return _Cookies.GetCookieHeader(new Uri(URL));
+                return this.Cookies.GetCookieHeader(new Uri(URL));
             }
             catch (Exception)
             {
@@ -207,7 +171,7 @@ namespace GoogleMusic.Net
         {
             try
             {
-                return _Cookies.GetCookies(new Uri(URL));
+                return this.Cookies.GetCookies(new Uri(URL));
             }
             catch (Exception)
             {
@@ -225,7 +189,7 @@ namespace GoogleMusic.Net
         {
             try
             {
-                _Cookies.Add(new Uri(URL), Cookie);
+                this.Cookies.Add(new Uri(URL), Cookie);
             }
             catch (Exception)
             {
@@ -244,7 +208,7 @@ namespace GoogleMusic.Net
             {
                 foreach (Cookie c in Cookie)
                 {
-                    _Cookies.Add(new Uri(URL), c);
+                    this.Cookies.Add(new Uri(URL), c);
                 }
             }
             catch (Exception)
@@ -262,7 +226,7 @@ namespace GoogleMusic.Net
         {
             try
             {
-                _Cookies.Add(new Uri(URL), CCollection);
+                this.Cookies.Add(new Uri(URL), CCollection);
             }
             catch (Exception)
             {
@@ -280,7 +244,7 @@ namespace GoogleMusic.Net
             string[] strCookies = CookieString.Split(new string[] { "; " }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string strCookie in strCookies)
             {
-                _Cookies.SetCookies(new Uri(URL), strCookie);
+                this.Cookies.SetCookies(new Uri(URL), strCookie);
             }
         }
 
@@ -315,9 +279,9 @@ namespace GoogleMusic.Net
             try
             {
                 string CookNewStr = string.Empty;
-                foreach (System.Net.Cookie Cook in _Cookies.GetCookies(OldDomain))
+                foreach (System.Net.Cookie Cook in this.Cookies.GetCookies(OldDomain))
                 {
-                    _Cookies.SetCookies(NewDomain, Cook.Name + "=" + Cook.Value + ((Cook.Expires != null) ? "; expires=" + Cook.Expires.ToString() : "") + (!(Cook.Path == string.Empty) ? "; path=" + Cook.Path : "" + "; domain=") + NewDomain.Host + (Cook.HttpOnly ? "; HttpOnly" : ""));
+                    this.Cookies.SetCookies(NewDomain, Cook.Name + "=" + Cook.Value + ((Cook.Expires != null) ? "; expires=" + Cook.Expires.ToString() : "") + (!(Cook.Path == string.Empty) ? "; path=" + Cook.Path : "" + "; domain=") + NewDomain.Host + (Cook.HttpOnly ? "; HttpOnly" : ""));
                 }
                 return true;
             }
@@ -339,24 +303,24 @@ namespace GoogleMusic.Net
         /// <param name="referer">Optional. The Referer HTTP header to send with the request. The default is nothing.</param>
         /// <param name="accept">Optional. The Accept HTTP header to send with the request. The default is */*.</param>
         /// <returns></returns>
-        public HttpWebRequest CreateRequest(string url, string method = "GET", string referer = "", string accept = "*/*")
+        public HttpWebRequest CreateRequest(string url, string method = Http.GET, string referer = "", string accept = "*/*")
         {
             HttpWebRequest request;
 
             request = (HttpWebRequest)HttpWebRequest.Create(url);
             request.Method = method;
-            request.Proxy = (_useProxy ? _proxy : null);
-            request.AutomaticDecompression = _decompressionMethod;
+            request.Proxy = (this.UseProxy ? this.Proxy : null);
+            request.AutomaticDecompression = this.DecompressionMethod;
 
-            request.CachePolicy = new HttpRequestCachePolicy(_cachingPolicy);
+            request.CachePolicy = new HttpRequestCachePolicy(this.CachingPolicy);
             request.Accept = accept;
             request.Referer = referer;
-            request.CookieContainer = _Cookies;
-            request.UserAgent = _userAgent;
-            request.Pipelined = (_usePipelining && method != "POST" && method != "PUT");
-            request.Timeout = _timeout;
+            request.CookieContainer = this.Cookies;
+            request.UserAgent = this.UserAgent;
+            request.Pipelined = (this.UsePipelining && method != Http.POST && method != Http.PUT);
+            request.Timeout = this.Timeout;
 
-            _lastUrl = url;
+            this.LastUrl = url;
 
             return request;
         }
@@ -506,7 +470,7 @@ namespace GoogleMusic.Net
                     // ProgressHandler: Begin asynchronous invoke
                     IAsyncResult progressHandlerResult = null;
                     if (progressHandler != null)
-                        progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesDone / (double)data.Length), null, null);
+                        progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesDone / (double)data.Length), null, null, null);
 
                     // WriteTask: Start writing to stream asynchronously
                     int nextChunkSize = Math.Min(data.Length - bytesDone, bufferSize);
@@ -556,13 +520,13 @@ namespace GoogleMusic.Net
             else if (contentLength > 33554432L)
                 return 1048576; // 1 MB when content is > 32 MB
             else if (contentLength > 8388608L)
-                return 524288; // 0.5 MB when content is > 32 MB
+                return 524288; // 0.5 MB when content is > 8 MB
             else if (contentLength > 1048576L)
-                return 131072;
-            else if (contentLength > 131072L)
-                return 32768;
+                return 131072; // 0.1 MB when content is > 1 MB
+            else if (contentLength > 65536L)
+                return 32768; // 32 KB when content is > 64 KB
             else
-                return 8192;
+                return (int)contentLength;
         }
 
         #endregion
@@ -639,7 +603,7 @@ namespace GoogleMusic.Net
                         // ProgressHandler: Begin asynchronous invoke
                         IAsyncResult progressHandlerResult = null;
                         if (progressHandler != null)
-                            progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesRead / (double)contentLength), null, null);
+                            progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesRead / (double)contentLength), null, null, null);
 
                         // ReadTask: Start another read asynchronously
                         Task<int> readTask = responseStream.ReadAsync(result, 0, (int)Math.Min(contentLength - bytesRead, bufferSize), cancellationToken);
@@ -670,7 +634,7 @@ namespace GoogleMusic.Net
                             // ProgressHandler: Begin asynchronous invoke
                             IAsyncResult progressHandlerResult = null;
                             if (progressHandler != null && response.ContentLength > 0)
-                                progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesRead / (double)response.ContentLength), null, null);
+                                progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesRead / (double)response.ContentLength), null, null, null);
 
                             // WriteTask: Start writing to memory asynchronously
                             Task writeTask = memory.WriteAsync(buffer, 0, chunkRead, cancellationToken);
