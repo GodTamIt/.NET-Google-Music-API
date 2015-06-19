@@ -21,8 +21,6 @@ namespace GoogleMusic.Clients
 
         private string _clientId;
         private string _clientSecret;
-        private string _authorizationCode;
-        private string _refreshToken;
         private string _accessToken;
 
         private Http_Old http;
@@ -52,7 +50,7 @@ namespace GoogleMusic.Clients
 
         public bool IsLoggedIn
         {
-            get { return !(String.IsNullOrEmpty(_accessToken) || String.IsNullOrEmpty(_refreshToken) || String.IsNullOrEmpty(_authorizationCode)); }
+            get { return !(String.IsNullOrEmpty(_accessToken) || String.IsNullOrEmpty(this.RefreshToken) || String.IsNullOrEmpty(this.AuthorizationCode)); }
         }
 
         /// <summary>
@@ -90,27 +88,17 @@ namespace GoogleMusic.Clients
         /// <summary>
         /// Read-only. The authorization code retrieved by the user to authorize access from the MusicManagerClient.
         /// </summary>
-        public string AuthorizationCode
-        {
-            get { return _authorizationCode; }
-            set { _authorizationCode = value; }
-        }
+        public string AuthorizationCode { get; protected set; }
 
         /// <summary>
-        /// Read-only. The token used to renew the access token. To get the refresh token, <see cref="MusicManagerClient.GetRefreshToken"/>.
+        /// Read-only. The token used to renew the access token. To get the refresh token, see <see cref="MusicManagerClient.GetRefreshToken"/>.
         /// </summary>
-        public string RefreshToken
-        {
-            get { return _refreshToken; }
-        }
+        public string RefreshToken { get; protected set; }
 
         /// <summary>
-        /// Read-only. The current access token. To renew, <see cref="MusicManagerClient.GetRefreshToken"/>.
+        /// Read-only. The current access token. To renew, see <see cref="MusicManagerClient.GetRefreshToken"/>.
         /// </summary>
-        public string AccessToken
-        {
-            get { return _accessToken; }
-        }
+        public string AccessToken { get; protected set; }
 
         #endregion
 
@@ -136,7 +124,7 @@ namespace GoogleMusic.Clients
         /// <returns>Returns the result from Google's servers.</returns>
         public Result<string> GetRefreshToken(string authorizationCode)
         {
-            _authorizationCode = authorizationCode;
+            this.AuthorizationCode = authorizationCode;
 
             try
             {
@@ -157,8 +145,8 @@ namespace GoogleMusic.Clients
                 // Bytes -> String -> JSON
                 Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(response.ToUTF8());
 
-                _refreshToken = json["refresh_token"];
-                return new Result<string>(true, _refreshToken, this);
+                this.RefreshToken = json["refresh_token"];
+                return new Result<string>(true, this.RefreshToken, this);
             }
             catch (WebException e)
             {
@@ -183,7 +171,7 @@ namespace GoogleMusic.Clients
         /// <returns>Returns a task the result from Google's servers.</returns>
         public async Task<Result<string>> GetRefreshTokenAsync(string authorizationCode, CancellationToken cancellationToken = default(CancellationToken))
         {
-            _authorizationCode = authorizationCode;           
+            this.AuthorizationCode = authorizationCode;           
             
             try
             {
@@ -209,8 +197,8 @@ namespace GoogleMusic.Clients
                 if (cancellationToken.IsCancellationRequested)
                     return null;
 
-                _refreshToken = json["refresh_token"];
-                return new Result<string>(true, _refreshToken, this);
+                this.RefreshToken = json["refresh_token"];
+                return new Result<string>(true, this.RefreshToken, this);
             }
             catch (WebException e)
             {
@@ -324,8 +312,8 @@ namespace GoogleMusic.Clients
         /// </summary>
         public void Logout()
         {
-            _authorizationCode = String.Empty;
-            _refreshToken = String.Empty;
+            this.AuthorizationCode = String.Empty;
+            this.RefreshToken = String.Empty;
             _accessToken = String.Empty;
         }
 
