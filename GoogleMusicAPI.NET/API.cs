@@ -93,45 +93,23 @@ namespace GoogleMusic
         #region Login/Logout
 
         /// <summary>
-        /// Attempts to log clients into the Google Music API.
+        /// Asynchronously attempts to log clients into the Google Music API.
         /// </summary>
         /// <param name="email">The email of the Google account.</param>
         /// <param name="password">The password of the Google account.</param>
         /// <param name="authorizationCode">The authorization code provided by the user.</param>
-        /// <returns>Returns whether the login was successful.</returns>
-        public Tuple<bool, Result<bool>, Result<string>, Result<string>> Login(string email, string password, string authorizationCode)
+        /// <returns>Returns whether the login attempt was successful.</returns>
+        public async Task<bool> Login(string email, string password, string authorizationCode)
         {
             Logout();
-            Result<bool> webResult = this.WebClient.Login_OldClientLogin(email, password);
-
-            Result<string> musicManagerRefreshToken = this.MusicManager.GetRefreshToken(authorizationCode);
-            Result<string> musicManagerAccessToken = this.MusicManager.RenewAccessToken();
-
-            return Tuple.Create(webResult.Success && !String.IsNullOrEmpty(this.MusicManager.AccessToken), webResult, musicManagerRefreshToken, musicManagerAccessToken);
-        }
-
-        /// <summary>
-        /// Attempts to log clients into the Google Music API.
-        /// </summary>
-        /// <param name="email">The email of the Google account.</param>
-        /// <param name="password">The password of the Google account.</param>
-        /// <param name="authorizationCode">The authorization code provided by the user.</param>
-        /// <returns>
-        /// Returns a tuple containing the following:
-        /// <para>Item 1: A <code>bool</code> value representing whether all clients were successfully logged in.</para>
-        /// <para>Item 2: A <code>Result</code> object representing the result of the WebClient.</para>
-        /// </returns>
-        public async Task<Tuple<bool, Result<bool>, Result<string>, Result<string>>> LoginAsync(string email, string password, string authorizationCode)
-        {
-            Logout();
-            Task<Result<bool>> webLogin = this.WebClient.LoginAsync_Old(email, password);
+            Task<Result<string>> webLogin = this.WebClient.Login(email, password);
 
             Result<string> musicManagerRefreshToken = await this.MusicManager.GetRefreshTokenAsync(authorizationCode);
             Result<string> musicManagerAccessToken = await this.MusicManager.RenewAccessTokenAsync();
 
-            Result<bool> webResult = await webLogin;
+            Result<string> webResult = await webLogin;
 
-            return Tuple.Create(webResult.Success && !String.IsNullOrEmpty(this.MusicManager.AccessToken), webResult, musicManagerRefreshToken, musicManagerAccessToken);
+            return (this.WebClient.IsLoggedIn && this.MusicManager.IsLoggedIn);
         }
 
         /// <summary>

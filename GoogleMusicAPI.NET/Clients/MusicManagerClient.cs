@@ -148,18 +148,7 @@ namespace GoogleMusic.Clients
                 this.RefreshToken = json["refresh_token"];
                 return new Result<string>(true, this.RefreshToken, this);
             }
-            catch (WebException e)
-            {
-                return new Result<string>(false, String.Empty, this, e.ToString("A network error occurred while attempting to retrieve an OAuth refresh token."), e);
-            }
-            catch (JsonException e)
-            {
-                return new Result<string>(false, String.Empty, this, e.ToString("An error occurred trying to parse the OAuth refresh token response."), e);
-            }
-            catch (Exception e)
-            {
-                return new Result<string>(false, String.Empty, this, e.ToString("An unknown error occurred."), e);
-            }
+            catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
             
         }
 
@@ -171,8 +160,8 @@ namespace GoogleMusic.Clients
         /// <returns>Returns a task the result from Google's servers.</returns>
         public async Task<Result<string>> GetRefreshTokenAsync(string authorizationCode, CancellationToken cancellationToken = default(CancellationToken))
         {
-            this.AuthorizationCode = authorizationCode;           
-            
+            this.AuthorizationCode = authorizationCode;
+
             try
             {
                 HttpWebResponse response;
@@ -200,18 +189,7 @@ namespace GoogleMusic.Clients
                 this.RefreshToken = json["refresh_token"];
                 return new Result<string>(true, this.RefreshToken, this);
             }
-            catch (WebException e)
-            {
-                return new Result<string>(false, String.Empty, this, e.ToString("A network error occurred while attempting to retrieve an OAuth refresh token."), e);
-            }
-            catch (JsonException e)
-            {
-                return new Result<string>(false, String.Empty, this, e.ToString("An error occurred trying to parse the OAuth refresh token response."), e);
-            }
-            catch (Exception e)
-            {
-                return new Result<string>(false, String.Empty, this, e.ToString("An unknown error occurred."), e);
-            }
+            catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
         }
 
         /// <summary>
@@ -221,7 +199,7 @@ namespace GoogleMusic.Clients
         public Result<string> RenewAccessToken()
         {
             if (String.IsNullOrEmpty(RefreshToken))
-                return new Result<string>(false, String.Empty, this, "OAuth: The refresh token cannot be null or empty when retrieving the access token.");
+                return new Result<string>(false, String.Empty, this);
 
             try
             {
@@ -245,15 +223,15 @@ namespace GoogleMusic.Clients
             }
             catch (WebException e)
             {
-                return new Result<string>(false, String.Empty, this, e.ToString("A network error occurred while attempting to retrieve an OAuth access token."), e);
+                return new Result<string>(false, String.Empty, this, e);
             }
             catch (JsonException e)
             {
-                return new Result<string>(false, String.Empty, this, e.ToString("An error occurred trying to parse the OAuth access token response."), e);
+                return new Result<string>(false, String.Empty, this, e);
             }
             catch (Exception e)
             {
-                return new Result<string>(false, String.Empty, this, e.ToString("An unknown error occurred."), e);
+                return new Result<string>(false, String.Empty, this, e);
             }
         }
 
@@ -265,7 +243,7 @@ namespace GoogleMusic.Clients
         public async Task<Result<string>> RenewAccessTokenAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             if (String.IsNullOrEmpty(RefreshToken))
-                return new Result<string>(false, String.Empty, this, "OAuth: The refresh token cannot be null or empty when retrieving the access token.");
+                return new Result<string>(false, String.Empty, this);
 
             try
             {
@@ -293,18 +271,7 @@ namespace GoogleMusic.Clients
                 _accessToken = json["access_token"];
                 return new Result<string>(true, _accessToken, this);
             }
-            catch (WebException e)
-            {
-                return new Result<string>(false, String.Empty, this, e.ToString("A network error occurred while attempting to retrieve an OAuth access token."), e);
-            }
-            catch (JsonException e)
-            {
-                return new Result<string>(false, String.Empty, this, e.ToString("An error occurred trying to parse the OAuth access token response."), e);
-            }
-            catch (Exception e)
-            {
-                return new Result<string>(false, String.Empty, this, e.ToString("An unknown error occurred."), e);
-            }
+            catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
         }
 
         /// <summary>

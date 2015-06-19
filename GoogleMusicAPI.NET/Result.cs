@@ -38,14 +38,12 @@ namespace GoogleMusic
         /// <param name="success">Required. The boolean value representing the operation's success.</param>
         /// <param name="result">Required. The value returned by the operation.</param>
         /// <param name="client">Required. The parent client of the operation executed.</param>
-        /// <param name="errorMessage">Optional. A human-readable error message describing a failure. Value should be empty if operation was successful.</param>
-        /// <param name="innerException">Optional. The underlying exception thrown by the program on a failure. Value should be null if operation was successful.</param>
-        internal Result(bool success, T result, Clients.IClient client, string errorMessage = "", Exception innerException = null)
+        /// <param name="innerException">Optional. The underlying exception thrown by the program on a failure. Value is null on success but maybe also be null on failure.</param>
+        internal Result(bool success, T result, Clients.IClient client, Exception innerException = null)
         {
             this.Success = success;
             this.Value = result;
             this.Client = client;
-            this.ErrorMessage = errorMessage;
             this.InnerException = innerException;
         }
         #endregion
@@ -68,12 +66,7 @@ namespace GoogleMusic
         public Clients.IClient Client { get; protected set; }
 
         /// <summary>
-        /// A human-readable error message describing a failure. Value is null if operation was successful.
-        /// </summary>
-        public string ErrorMessage { get; protected set; }
-
-        /// <summary>
-        /// The underlying exception thrown by the program on a failure. Value is null if operation was successful.
+        /// Optional. The underlying exception thrown by the program on a failure. Value is null on success but maybe also be null on failure.
         /// </summary>
         public Exception InnerException { get; protected set; }
 
