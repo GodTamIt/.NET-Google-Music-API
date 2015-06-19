@@ -341,5 +341,21 @@ namespace GoogleMusic
 
         #endregion
 
+        #region Hash Code
+
+        public override int GetHashCode()
+        {
+            return this.ID.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Song)
+                return this.ID.Equals(((Song)obj).ID);
+            return false;
+        }
+
+        #endregion
+
     }
 }
