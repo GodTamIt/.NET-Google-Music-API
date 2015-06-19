@@ -62,182 +62,13 @@ namespace GoogleMusic.Clients
         #region Login
 
         /// <summary>
-        /// Attempts to log into Google's Music service using Google's ClientLogin.
-        /// </summary>
-        /// <param name="email">Required. The email address of the Google account to log into.</param>
-        /// <param name="password">Required. The password of the Google account to log into.</param>
-        /// <returns>A Result object indicating whether the login was successful.</returns>
-        public Result<bool> Login_OldClientLogin(string email, string password)
-        {
-            Http test = new Http();
-            // Step 1: Get authorization token
-            try
-            {
-                string response;
-                using (FormBuilder form = new FormBuilder())
-                {
-                    form.AddField("service", "sj");
-                    form.AddField("Email", email);
-                    form.AddField("Passwd", password);
-                    form.AddEnding();
-
-                    response = http_old.Request(SetupWebRequest("https://www.google.com/accounts/ClientLogin", Http_Old.POST), form).ToUTF8();
-                }
-
-                Match regex = AUTH_REGEX.Match(response);
-
-                if (regex.Success)
-                {
-                    this.AuthorizationToken = regex.Groups["AUTH"].Value;
-                }
-                else
-                {
-                    this.Logout();
-                    regex = AUTH_ERROR_REGEX.Match(response);
-                    if (regex.Success)
-                        return new Result<bool>(false, false, this, "Google returned the following error while trying to retrieve an authorization token:\r\n\r\n" + regex.Groups["ERROR"].Value);
-                    else
-                        return new Result<bool>(false, false, this, "An unknown error occurred.");
-                }
-            }
-            catch (WebException e)
-            {
-                return new Result<bool>(false, false, this, e.ToString("A network error occurred while attempting to retrieve an authorization token."), e);
-            }
-            catch (Exception e)
-            {
-                return new Result<bool>(false, false, this, e.ToString("An unknown error occurred."), e);
-            }
-
-            // Step 2: Get authorization cookie
-            try
-            {
-                CookieCollection cookies;
-                using (HttpWebResponse response = http_old.Request(SetupWebRequest("https://play.google.com/music/listen?hl=en&u=0", Http_Old.HEAD, false)))
-                {
-                    cookies = response.Cookies;
-                }
-
-                bool success = false;
-                foreach (Cookie cookie in cookies)
-                {
-                    if (cookie.Name.Equals("xt"))
-                    {
-                        success = true;
-                        //_xt = cookie.Value;
-                        break;
-                    }
-                }
-
-                if (success)
-                    return new Result<bool>(true, true, this);
-                else
-                    return new Result<bool>(false, false, this, "Unable to retrieve the proper authorization cookies from Google.");
-            }
-            catch (WebException e)
-            {
-                return new Result<bool>(false, false, this, e.ToString("A network error occurred while attempting to retrieve authorization cookies."), e);
-            }
-            catch (Exception e)
-            {
-                return new Result<bool>(false, false, this, e.ToString("An unknown error occurred."), e);
-            }
-        }
-
-        /// <summary>
-        /// Asynchronously attempts to log into Google's Music service using Google's ClientLogin.
-        /// </summary>
-        /// <param name="email">Required. The email address of the Google account to log into.</param>
-        /// <param name="password">Required. The password of the Google account to log into.</param>
-        /// <param name="cancellationToken">Optional. The token to monitor for cancellation requests.</param>
-        /// <returns>A Result object indicating whether the login was successful.</returns>
-        public async Task<Result<bool>> LoginAsync_Old(string email, string password, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            // Step 1: Get authorization token
-            try
-            {
-                string response;
-                using (FormBuilder form = new FormBuilder())
-                {
-                    form.AddField("service", "sj");
-                    form.AddField("Email", email);
-                    form.AddField("Passwd", password);
-                    form.AddEnding();
-
-                    response = await (await http_old.RequestAsync(SetupWebRequest("https://www.google.com/accounts/ClientLogin", Http_Old.POST), form, cancellationToken)).ToUTF8Async();
-                }
-
-                if (cancellationToken.IsCancellationRequested)
-                    return null;
-
-                Match regex = AUTH_REGEX.Match(response);
-
-                if (regex.Success)
-                {
-                    this.AuthorizationToken = regex.Groups["AUTH"].Value;
-                }
-                else
-                {
-                    this.Logout();
-                    regex = AUTH_ERROR_REGEX.Match(response);
-                    if (regex.Success)
-                        return new Result<bool>(false, false, this, "Google returned the following error while trying to retrieve an authorization token:\r\n\r\n" + regex.Groups["ERROR"].Value);
-                    else
-                        return new Result<bool>(false, false, this, "An unknown error occurred.");
-                }
-            }
-            catch (WebException e)
-            {
-                return new Result<bool>(false, false, this, e.ToString("A network error occurred while attempting to retrieve an authorization token."), e);
-            }
-            catch (Exception e)
-            {
-                return new Result<bool>(false, false, this, e.ToString("An unknown error occurred."), e);
-            }
-
-            // Step 2: Get authorization cookie
-            try
-            {
-                CookieCollection cookies;
-                using (HttpWebResponse response = await http_old.RequestAsync(SetupWebRequest("https://play.google.com/music/listen?hl=en&u=0", Http_Old.HEAD, false)))
-                {
-                    cookies = response.Cookies;
-                }
-
-                bool success = false;
-                foreach (Cookie cookie in cookies)
-                {
-                    if (cookie.Name.Equals("xt"))
-                    {
-                        success = true;
-                        //_xt = cookie.Value;
-                        break;
-                    }
-                }
-
-                if (success)
-                    return new Result<bool>(true, true, this);
-                else
-                    return new Result<bool>(false, false, this, "Unable to retrieve the proper authorization cookies from Google.");
-            }
-            catch (WebException e)
-            {
-                return new Result<bool>(false, false, this, e.ToString("A network error occurred while attempting to retrieve authorization cookies."), e);
-            }
-            catch (Exception e)
-            {
-                return new Result<bool>(false, false, this, e.ToString("An unknown error occurred."), e);
-            }
-        }
-
-        /// <summary>
         /// Asynchronously attempts to log into Google's Music service.
         /// </summary>
         /// <param name="email">Required. The email address of the Google account to log into.</param>
         /// <param name="password">Required. The password of the Google account to log into.</param>
         /// <param name="cancellationToken">Optional. The token to monitor for cancellation requests.</param>
         /// <returns>A Result object indicating whether the login was successful.</returns>
-        public async Task<Result<bool>> Login(string email, string password, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Result<string>> Login(string email, string password, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Step 1: Get authorization token
             var form = new[]
@@ -269,15 +100,12 @@ namespace GoogleMusic.Clients
                     this.Logout();
                     regex = AUTH_ERROR_REGEX.Match(response);
                     if (regex.Success)
-                        return new Result<bool>(false, false, this, "Google returned the following error while trying to retrieve an authorization token:\r\n\r\n" + regex.Groups["ERROR"].Value);
+                        return new Result<string>(false, "Google returned the following error while trying to retrieve an authorization token:\r\n\r\n" + regex.Groups["ERROR"].Value, this);
                     else
-                        return new Result<bool>(false, false, this, "An unknown error occurred.");
+                        return new Result<string>(false, "An unknown error occurred.", this);
                 }
             }
-            catch (Exception e)
-            {
-                return new Result<bool>(false, false, this, e.ToString("An error occurred while attempting to retrieve an authorization token."), e);
-            }
+            catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
 
 
             // Step 2: Get authorization cookie
@@ -288,17 +116,14 @@ namespace GoogleMusic.Clients
                 this.UserId = AUTH_USER_ID_REGEX.Match(response).Groups["USERID"].Value;
 
                 if ((http.Settings.CookieContainer.GetCookie("https://play.google.com/music/listen", "xt")) == null)
-                    return new Result<bool>(false, false, this, "Unable to retrieve the proper authorization cookies from Google.");
+                    return new Result<string>(false, "Unable to retrieve the proper authorization cookies from Google.", this);
             }
-            catch (Exception e)
-            {
-                return new Result<bool>(false, false, this, e.ToString("An error occurred while attempting to retrieve authorization cookies."), e);
-            }
+            catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
 
 
             // Step 3: Generate session ID
             this.SessionId = GenerateRandomSessionId();
-            return new Result<bool>(true, true, this);
+            return new Result<string>(true, String.Empty, this);
         }
 
         private static string GenerateRandomSessionId()
@@ -356,7 +181,7 @@ namespace GoogleMusic.Clients
         public async Task<Result<int>> GetSongCount()
         {
             if (!this.IsLoggedIn)
-                return new Result<int>(false, -1, this, "The Google Music library's song count cannot be retrieved while logged out.");
+                return new Result<int>(false, -1, this, new ClientNotAuthorizedException(this));
 
             var form = new[] { new KeyValuePair<string, string>("json", String.Format("{{\"sessionId\":\"{0}\"}}", this.SessionId)) };
             string response;
@@ -370,8 +195,7 @@ namespace GoogleMusic.Clients
 
                 return new Result<int>(true, JObject.Parse(response)["availableTracks"].ToObject<int>(), this);
             }
-            catch (JsonException e) { return new Result<int>(false, -1, this, e.ToString("Failed to parse number of songs in the Google Music library."), e); }
-            catch (Exception e) { return new Result<int>(false, -1, this, e.ToString("An error occurred while retrieving the number of songs in the Google Music library."), e); }
+            catch (Exception e) { return new Result<int>(false, -1, this, e); }
         }
 
         #endregion
@@ -387,7 +211,7 @@ namespace GoogleMusic.Clients
         public async Task<Result<ICollection<Song>>> GetAllSongs(ICollection<Song> results = null, object lockObject = null)
         {
             if (!this.IsLoggedIn)
-                return new Result<ICollection<Song>>(false, results, this, "The Google Music library cannot be retrieved while logged out.");
+                return new Result<ICollection<Song>>(false, results, this);
 
             if (results == null)
             {
@@ -399,7 +223,7 @@ namespace GoogleMusic.Clients
             // Step 1: Get response from Google
             var response = await GetAllSongs_Request();
             if (!response.Success)
-                return new Result<ICollection<Song>>(response.Success, results, response.Client, response.ErrorMessage, response.InnerException);
+                return new Result<ICollection<Song>>(response.Success, results, response.Client, response.InnerException);
 
 
             // Step 2: Asynchronously parse result
@@ -421,7 +245,7 @@ namespace GoogleMusic.Clients
                 return new Result<bool>(true, true, this);
             });
 
-            return new Result<ICollection<Song>>(parse.Success, results, this, parse.ErrorMessage, parse.InnerException);
+            return new Result<ICollection<Song>>(parse.Success, results, this, parse.InnerException);
         }
 
         private async Task<Result<string>> GetAllSongs_Request()
@@ -434,7 +258,7 @@ namespace GoogleMusic.Clients
 
                 return new Result<string>(true, await http.Client.GetStringAsync(url), this);
             }
-            catch (Exception e) { return new Result<string>(false, String.Empty, this, e.ToString("A network occurred while trying to retrieve the Google Music library."), e); }
+            catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
         }
 
         #endregion
@@ -443,7 +267,9 @@ namespace GoogleMusic.Clients
 
         public async Task<Result<ICollection<Song>>> GetDeletedSongs(ICollection<Song> results = null, object lockObject = null)
         {
-            if (results == null)
+            if (!this.IsLoggedIn)
+                return new Result<ICollection<Song>>(false, results, this, new ClientNotAuthorizedException(this));
+            else if (results == null)
             {
                 results = new HashSet<Song>();
                 // Note: Lock object only if results weren't null. Otherwise, it is unnecessary overhead (since they don't have access to results)
@@ -452,12 +278,12 @@ namespace GoogleMusic.Clients
 
             var requestResult = await GetDeletedSongs_Request();
             if (!requestResult.Success)
-                return new Result<ICollection<Song>>(requestResult.Success, results, this, requestResult.ErrorMessage, requestResult.InnerException);
+                return new Result<ICollection<Song>>(requestResult.Success, results, this, requestResult.InnerException);
 
 
             var parseResult = await Task.Run(() => ParseSongs(1, requestResult.Value, results, lockObject));
 
-            return new Result<ICollection<Song>>(parseResult.Success, results, this, parseResult.ErrorMessage, parseResult.InnerException);
+            return new Result<ICollection<Song>>(parseResult.Success, results, this, parseResult.InnerException);
         }
 
         private async Task<Result<string>> GetDeletedSongs_Request()
@@ -469,7 +295,68 @@ namespace GoogleMusic.Clients
             {
                 return new Result<string>(true, await (await http.Client.PostAsync(url, stringContent)).Content.ReadAsStringAsync(), this);
             }
-            catch (Exception e) { return new Result<string>(false, String.Empty, this, e.ToString("A network occurred while trying to retrieve the Google Music library."), e); }
+            catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
+        }
+
+        #endregion
+
+        #region DeleteSongs
+
+        public async Task<Result<IEnumerable<Guid>>> DeleteSongs(IEnumerable<Song> songs)
+        {
+            if (!this.IsLoggedIn)
+                return new Result<IEnumerable<Guid>>(false, new Guid[0], this, new ClientNotAuthorizedException(this));
+            if (songs == null || songs.Count() < 1)
+                return new Result<IEnumerable<Guid>>(true, new Guid[0], this);
+
+            string json = await Task.Run(() => DeleteSongs_BuildJson(songs));
+
+            var requestResult = await DeleteSongs_Request(json);
+
+            return await Task.Run(() => DeleteSongs_ParseResponse(requestResult.Value, songs.Count()));
+        }
+
+        private string DeleteSongs_BuildJson(IEnumerable<Song> songs)
+        {
+            string[] guids = new string[songs.Count()];
+            {
+                int i = 0;
+                foreach (Song song in songs)
+                    guids[i++] = song.ID.ToString();
+            }
+
+            var build = new Dictionary<string, object>(3);
+            build.Add("songIds", guids);
+            build.Add("entryIds", new string[] {""});
+            build.Add("listId", "all");
+            build.Add("sessionId", this.SessionId);
+
+            return JsonConvert.SerializeObject(build);
+        }
+
+        private async Task<Result<string>> DeleteSongs_Request(string json)
+        {
+            string response;
+            try
+            {
+                using (var formContent = new FormUrlEncodedContent(new[] {new KeyValuePair<string, string>("json", json)}))
+                {
+                    response = await (await http.Client.PostAsync(AppendXt("https://play.google.com/music/services/deletesong"), formContent)).Content.ReadAsStringAsync();
+                }
+            }
+            catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
+
+            return new Result<string>(true, response, this);
+        }
+
+        private Result<IEnumerable<Guid>> DeleteSongs_ParseResponse(string response, int originalCount)
+        {
+            try
+            {
+                dynamic results = JsonConvert.DeserializeObject(response);
+                return new Result<IEnumerable<Guid>>(true, results.deleteIds.ToObject<Guid[]>(), this);
+            }
+            catch (Exception e) { return new Result<IEnumerable<Guid>>(false, new Guid[0], this, e); }
         }
 
         #endregion
@@ -479,7 +366,7 @@ namespace GoogleMusic.Clients
         private static Result<bool> ParseSongs(int arrayIndex, string javascriptData, ICollection<Song> results, object lockObject)
         {
             if (javascriptData == null)
-                return new Result<bool>(false, false, null, "Cannot parse null JavaScript data.");
+                return new Result<bool>(false, false, null);
 
             JArray trackArray;
             try
@@ -494,7 +381,7 @@ namespace GoogleMusic.Clients
                     trackArray = (JArray) trackArray[0];
 
             }
-            catch (Exception e) { return new Result<bool>(false, false, null, e.ToString("The Google Music songs were formatted in an unexpected, unidentifiable way."), e); }
+            catch (Exception e) { return new Result<bool>(false, false, null, e); }
 
             foreach (var track in trackArray)
             {
