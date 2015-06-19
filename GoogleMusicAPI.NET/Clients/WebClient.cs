@@ -26,8 +26,8 @@ namespace GoogleMusic.Clients
         // Constants
         private Regex AUTH_REGEX;
         private Regex AUTH_ERROR_REGEX;
+        private Regex AUTH_USER_ID_REGEX;
         private Regex GET_ALL_SONGS_REGEX;
-        private const string BASE_URL = "https://www.googleapis.com/sj/v1.1/";
 
         private Http_Old http_old;
         private Http http;
@@ -44,6 +44,7 @@ namespace GoogleMusic.Clients
             
             AUTH_REGEX = new Regex(@"Auth=(?<AUTH>(.*?))$", RegexOptions.IgnoreCase);
             AUTH_ERROR_REGEX = new Regex(@"Error=(?<ERROR>(.*?))$", RegexOptions.IgnoreCase);
+            AUTH_USER_ID_REGEX = new Regex(@"window\['USER_ID'\] = '(?<USERID>(.*?))'", RegexOptions.IgnoreCase);
             GET_ALL_SONGS_REGEX = new Regex(@"window.parent\['slat_process'\]\((?<TRACKS>.*?)\);\nwindow.parent\['slat_progress'\]", RegexOptions.Singleline);
         }
 
@@ -51,7 +52,7 @@ namespace GoogleMusic.Clients
 
         #region Properties
 
-        public string AuthorizationToken { get; set; }
+        public string AuthorizationToken { get; protected set; }
 
         public bool IsLoggedIn
         {
@@ -59,6 +60,8 @@ namespace GoogleMusic.Clients
         }
 
         public string SessionId { get; set; }
+
+        public string UserId { get; protected set; }
 
         #endregion
 
@@ -286,10 +289,9 @@ namespace GoogleMusic.Clients
             // Step 2: Get authorization cookie
             try
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Head, "https://play.google.com/music/listen?hl=en&u=0"))
-                {
-                    await http.Client.SendAsync(request, cancellationToken);
-                }
+                string response = await http.Client.GetStringAsync("https://play.google.com/music/listen?u=0");
+
+                this.UserId = AUTH_USER_ID_REGEX.Match(response).Groups["USERID"].Value;
 
                 if ((http.Settings.CookieContainer.GetCookie("https://play.google.com/music/listen", "xt")) == null)
                     return new Result<bool>(false, false, this, "Unable to retrieve the proper authorization cookies from Google.");
@@ -377,28 +379,10 @@ namespace GoogleMusic.Clients
 
         #region GetAllSongs
 
-        private async Task<string> GetAllSongs_Old(int songsPerRequest = 10)
-        {
-            var form = new[] { new KeyValuePair<string, string>("max_results", "10") };
-            string response;
-
-            try
-            {
-                using (var formContent = new ByteArrayContent(Encoding.UTF8.GetBytes("{'max-results':3}")))
-                {
-                    formContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                    response = await(await http.Client.PostAsync(AppendXt(BASE_URL + "trackfeed?alt=json&updated-min=0&include-tracks=true"), formContent)).Content.ReadAsStringAsync();
-                }
-
-                return response;
-            }
-            catch (Exception) { return String.Empty; }
-        }
-
-        public async Task<ICollection<KeyValuePair<string, Song>>> GetAllSongs(int estimatedSize = -1, ICollection<KeyValuePair<string, Song>> results = null)
+        public async Task<ICollection<Song>> GetAllSongs(ICollection<Song> results = null)
         {
             if (results == null)
-                results = new Dictionary<string, Song>(estimatedSize > 0 ? estimatedSize : 1000);
+                results = new HashSet<Song>();
             
             string response = await GetAllSongs_Request();
 
@@ -412,7 +396,7 @@ namespace GoogleMusic.Clients
             return await http.Client.GetStringAsync(url);
         }
 
-        private ICollection<KeyValuePair<string, Song>> GetAllSongs_Parse(string javascriptData, ICollection<KeyValuePair<string, Song>> results)
+        private ICollection<Song> GetAllSongs_Parse(string javascriptData, ICollection<Song> results)
         {
             //Match match = GET_ALL_SONGS_REGEX.Match(javascriptData);
             var match = GET_ALL_SONGS_REGEX.Match(javascriptData);
@@ -429,7 +413,7 @@ namespace GoogleMusic.Clients
                     foreach (var track in trackArray)
                     {
                         Song song = Song.Build(track);
-                        { results.Add(new KeyValuePair<string, Song>(song.ID.ToString(), song)); }
+                        results.Add(song);
                     }
                 }
                 catch (Exception) { }
@@ -443,6 +427,8 @@ namespace GoogleMusic.Clients
         }
 
         #endregion
+
+
 
     }
 }
