@@ -395,11 +395,11 @@ namespace GoogleMusic.Clients
             catch (Exception) { return String.Empty; }
         }
 
-        public async Task<Dictionary<string, Song>> GetAllSongs(int estimatedSize = -1, Dictionary<string, Song> results = null)
+        public async Task<ICollection<KeyValuePair<string, Song>>> GetAllSongs(int estimatedSize = -1, ICollection<KeyValuePair<string, Song>> results = null)
         {
             if (results == null)
                 results = new Dictionary<string, Song>(estimatedSize > 0 ? estimatedSize : 1000);
-
+            
             string response = await GetAllSongs_Request();
 
             return await Task.FromResult(GetAllSongs_Parse(response, results));;
@@ -412,7 +412,7 @@ namespace GoogleMusic.Clients
             return await http.Client.GetStringAsync(url);
         }
 
-        private Dictionary<string, Song> GetAllSongs_Parse(string javascriptData, Dictionary<string, Song> results)
+        private ICollection<KeyValuePair<string, Song>> GetAllSongs_Parse(string javascriptData, ICollection<KeyValuePair<string, Song>> results)
         {
             //Match match = GET_ALL_SONGS_REGEX.Match(javascriptData);
             var match = GET_ALL_SONGS_REGEX.Match(javascriptData);
@@ -429,7 +429,7 @@ namespace GoogleMusic.Clients
                     foreach (var track in trackArray)
                     {
                         Song song = Song.BuildFromDynamic(track);
-                        { results.Add(song.ID.ToString(), song); }
+                        { results.Add(new KeyValuePair<string, Song>(song.ID.ToString(), song)); }
                     }
                 }
                 catch (Exception) { }
