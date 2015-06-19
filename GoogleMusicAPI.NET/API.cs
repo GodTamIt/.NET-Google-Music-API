@@ -147,7 +147,7 @@ namespace GoogleMusic
 
         #region GetSongCount
 
-        public async Task<int> GetSongCount()
+        public async Task<Result<int>> GetSongCount()
         {
             return await this.WebClient.GetSongCount();
         }

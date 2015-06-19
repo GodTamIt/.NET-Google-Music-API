@@ -27,7 +27,7 @@ namespace GoogleMusic.Clients
         private static readonly Regex AUTH_REGEX = new Regex(@"Auth=(?<AUTH>(.*?))$", RegexOptions.IgnoreCase);
         private static readonly Regex AUTH_ERROR_REGEX = new Regex(@"Error=(?<ERROR>(.*?))$", RegexOptions.IgnoreCase);
         private static readonly Regex AUTH_USER_ID_REGEX = new Regex(@"window\['USER_ID'\] = '(?<USERID>(.*?))'", RegexOptions.IgnoreCase);
-        private static readonly Regex GET_ALL_SONGS_REGEX = new Regex(@"window.parent\['slat_process'\]\((?<TRACKS>.*?)\);\nwindow.parent\['slat_progress'\]", RegexOptions.Singleline | RegexOptions.Compiled);
+        private static readonly Regex GET_ALL_SONGS_REGEX = new Regex(@"window.parent\['slat_process'\]\((?<SONGS>.*?)\);\nwindow.parent\['slat_progress'\]", RegexOptions.Singleline);
 
         private Http_Old http_old;
         private Http http;
@@ -349,8 +349,15 @@ namespace GoogleMusic.Clients
 
         #region GetSongCount
 
-        public async Task<int> GetSongCount()
+        /// <summary>
+        /// Retrieves the number of songs in the current Google Music library.
+        /// </summary>
+        /// <returns>Returns a</returns>
+        public async Task<Result<int>> GetSongCount()
         {
+            if (!this.IsLoggedIn)
+                return new Result<int>(false, -1, this, "The Google Music library's song count cannot be retrieved while logged out.");
+
             var form = new[] { new KeyValuePair<string, string>("json", String.Format("{{\"sessionId\":\"{0}\"}}", this.SessionId)) };
             string response;
 
@@ -361,12 +368,10 @@ namespace GoogleMusic.Clients
                     response = await (await http.Client.PostAsync(AppendXt("https://play.google.com/music/services/getstatus"), formContent)).Content.ReadAsStringAsync();
                 }
 
-                return JObject.Parse(response)["availableTracks"].ToObject<int>();
+                return new Result<int>(true, JObject.Parse(response)["availableTracks"].ToObject<int>(), this);
             }
-            catch (Exception) { return -1; }
-
-            //HttpWebRequest request = SetupWebRequest("https://play.google.com/music/services/getstatus", Http_Old.POST);
-            //return http_old.Request(request, "application/x-www-form-urlencoded", new byte[0]).ToUTF8();
+            catch (JsonException e) { return new Result<int>(false, -1, this, e.ToString("Failed to parse number of songs in the Google Music library."), e); }
+            catch (Exception e) { return new Result<int>(false, -1, this, e.ToString("An error occurred while retrieving the number of songs in the Google Music library."), e); }
         }
 
         #endregion
@@ -374,12 +379,69 @@ namespace GoogleMusic.Clients
         #region GetAllSongs
 
         /// <summary>
-        /// Retrieves all songs in the user's library.
+        /// Retrieves all songs in the current Google Music library.
         /// </summary>
         /// <param name="results">Optional. The collection to add the songs to. The recommended data structure in nearly all cases is <see cref="System.Collections.Generic.HashSet"/>.</param>
         /// <param name="lockObject">Optional. The object to lock when making writes to <paramref name="results"/>. This is useful when <paramref name="results"/> is not thread-safe.</param>
-        /// <returns>Returns a Task containing the data structure containing the new songs.</returns>
-        public async Task<ICollection<Song>> GetAllSongs(ICollection<Song> results = null, object lockObject = null)
+        /// <returns>Returns a Task containing a <see cref="Result"/> object with the resulting collection of songs if successful.</returns>
+        public async Task<Result<ICollection<Song>>> GetAllSongs(ICollection<Song> results = null, object lockObject = null)
+        {
+            if (!this.IsLoggedIn)
+                return new Result<ICollection<Song>>(false, results, this, "The Google Music library cannot be retrieved while logged out.");
+
+            if (results == null)
+            {
+                results = new HashSet<Song>();
+                // Note: Lock object only if results weren't null. Otherwise, it is unnecessary overhead (since they don't have access to results)
+                lockObject = null;
+            }
+            
+            // Step 1: Get response from Google
+            var response = await GetAllSongs_Request();
+            if (!response.Success)
+                return new Result<ICollection<Song>>(response.Success, results, response.Client, response.ErrorMessage, response.InnerException);
+
+
+            // Step 2: Asynchronously parse result
+            var parse = await Task.Run(() =>
+            {
+                var match = GET_ALL_SONGS_REGEX.Match(response.Value);
+                Result<bool> parseResult;
+
+                while (match.Success)
+                {
+                    // GetAllSongs is located in 0th index
+                    parseResult = ParseSongs(0, match.Groups["SONGS"].Value, results, lockObject);
+
+                    if (parseResult.Success)
+                        return parseResult;
+
+                    match = match.NextMatch();
+                }
+                return new Result<bool>(true, true, this);
+            });
+
+            return new Result<ICollection<Song>>(parse.Success, results, this, parse.ErrorMessage, parse.InnerException);
+        }
+
+        private async Task<Result<string>> GetAllSongs_Request()
+        {
+            try
+            {
+                string url = AppendXt(
+                    String.Format(@"https://play.google.com/music/services/streamingloadalltracks?json={{""tier"":1,""requestCause"":1,""requestType"":1,""sessionId"":""{0}""}}&format=jsarray",
+                    this.SessionId));
+
+                return new Result<string>(true, await http.Client.GetStringAsync(url), this);
+            }
+            catch (Exception e) { return new Result<string>(false, String.Empty, this, e.ToString("A network occurred while trying to retrieve the Google Music library."), e); }
+        }
+
+        #endregion
+
+        #region GetDeleted
+
+        public async Task<Result<ICollection<Song>>> GetDeletedSongs(ICollection<Song> results = null, object lockObject = null)
         {
             if (results == null)
             {
@@ -388,36 +450,60 @@ namespace GoogleMusic.Clients
                 lockObject = null;
             }
 
-            string response = await GetAllSongs_Request();
+            var requestResult = await GetDeletedSongs_Request();
+            if (!requestResult.Success)
+                return new Result<ICollection<Song>>(requestResult.Success, results, this, requestResult.ErrorMessage, requestResult.InnerException);
 
-            return await Task.FromResult(GetAllSongs_Parse(response, results, lockObject));
+
+            var parseResult = await Task.Run(() => ParseSongs(1, requestResult.Value, results, lockObject));
+
+            return new Result<ICollection<Song>>(parseResult.Success, results, this, parseResult.ErrorMessage, parseResult.InnerException);
         }
 
-        private async Task<string> GetAllSongs_Request()
+        private async Task<Result<string>> GetDeletedSongs_Request()
         {
-            string url = AppendXt(String.Format(@"https://play.google.com/music/services/streamingloadalltracks?json={{""tier"":1,""requestCause"":1,""requestType"":1,""sessionId"":""{0}""}}&format=jsarray",
-                this.SessionId));
-            return await http.Client.GetStringAsync(url);
-        }
+            string url = AppendXt("https://play.google.com//music/services/loadautoplaylist?format=jsarray");
+            var stringContent = new StringContent(String.Format(@"[[""{0}"",1,""{1}""],[""auto-playlist-trash""]]", this.SessionId, this.UserId));
 
-        private ICollection<Song> GetAllSongs_Parse(string javascriptData, ICollection<Song> results, object lockObject)
-        {
-            //Match match = GET_ALL_SONGS_REGEX.Match(javascriptData);
-            var match = GET_ALL_SONGS_REGEX.Match(javascriptData);
-
-            while (match.Success)
+            try
             {
-                dynamic trackArray;
+                return new Result<string>(true, await (await http.Client.PostAsync(url, stringContent)).Content.ReadAsStringAsync(), this);
+            }
+            catch (Exception e) { return new Result<string>(false, String.Empty, this, e.ToString("A network occurred while trying to retrieve the Google Music library."), e); }
+        }
+
+        #endregion
+
+        #region Parsing
+
+        private static Result<bool> ParseSongs(int arrayIndex, string javascriptData, ICollection<Song> results, object lockObject)
+        {
+            if (javascriptData == null)
+                return new Result<bool>(false, false, null, "Cannot parse null JavaScript data.");
+
+            JArray trackArray;
+            try
+            {
+                dynamic jsonData = JsonConvert.DeserializeObject(javascriptData);
+                //dynamic jsonData = JsonConvert.DeserializeObject("{stringArray:" + javascriptData + "}");
+                //trackArray = (JArray)jsonData.stringArray[arrayIndex];
+
+                trackArray = (JArray)jsonData[arrayIndex];
+
+                while (trackArray[0] is JArray && trackArray[0][0] is JArray)
+                    trackArray = (JArray) trackArray[0];
+
+            }
+            catch (Exception e) { return new Result<bool>(false, false, null, e.ToString("The Google Music songs were formatted in an unexpected, unidentifiable way."), e); }
+
+            foreach (var track in trackArray)
+            {
                 try
                 {
-                    dynamic jsonData = JsonConvert.DeserializeObject("{stringArray:" + match.Groups["TRACKS"].Value + "}");
+                    Song song = Song.Build(track);
 
-                    trackArray = jsonData.stringArray[0];
-
-                    foreach (var track in trackArray)
+                    if (song != null)
                     {
-                        Song song = Song.Build(track);
-
                         if (lockObject == null)
                             results.Add(song);
                         else
@@ -425,18 +511,10 @@ namespace GoogleMusic.Clients
                     }
                 }
                 catch (Exception) { }
-
-                match = match.NextMatch();
             }
-            
 
-
-            return results;
+            return new Result<bool>(true, true, null);
         }
-
-        #endregion
-
-        #region GetDeleted
 
         #endregion
 
