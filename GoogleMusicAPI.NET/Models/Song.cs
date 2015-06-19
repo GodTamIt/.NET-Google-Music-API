@@ -14,7 +14,7 @@ namespace GoogleMusic
     /// </summary>
     public class Song
     {
-        #region Builder
+        #region Build
 
         /// <summary>
         /// Builds a Google Music song from a dynamic type.
@@ -74,34 +74,32 @@ namespace GoogleMusic
             song.PreviewInfo = track[45];
             song.AlbumArtUrl = track[46];
 
-            if (track.Count <= 47) return song;
+            if (track.Count < 48) return song;
 
-            if (track.Count > 47)
-            {
-                song.Explanation = track[47];
-                song.dib = track[48];
-                song.fib = track[49];
-                song.qeb = track[50];
-                if (track.Count > 50)
-                {
-                    song.OtherMatchedId = track[50];
-                }
-                song.Unknown51 = track[51];
-                if (track.Count > 52)
-                {
-                    song.YoutubeId = track[52];
-                    song.Unknown53 = track[53];
-                    song.Unknown54 = track[54];
-                }
-                if (track.Count > 55)
-                {
-                    song.YoutubeInfo = track[55];
-                }
-                if (track.Count > 56)
-                {
-                    song.u5 = track[56];
-                }
-            }
+            song.Explanation = track[47];
+            song.dib = track[48];
+            song.fib = track[49];
+            song.qeb = track[50];
+
+            if (track.Count < 51) return song;
+
+            song.OtherMatchedId = track[50];
+            song.Unknown51 = track[51];
+
+            if (track.Count < 53) return song;
+
+            song.YoutubeId = track[52];
+            song.Unknown53 = track[53];
+            song.Unknown54 = track[54];
+
+            if (track.Count < 56) return song;
+
+            song.YoutubeInfo = track[55];
+
+            if (track.Count < 57) return song;
+
+            song.u5 = track[56];
+
             return song;
         }
 
