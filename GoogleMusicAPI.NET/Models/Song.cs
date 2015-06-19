@@ -21,7 +21,7 @@ namespace GoogleMusic
         /// </summary>
         /// <param name="track">Required. The dynamic object to build from. The function expects this to be an array at runtime.</param>
         /// <returns></returns>
-        public static Song BuildFromDynamic(dynamic track)
+        public static Song Build(dynamic track)
         {
             Song song = new Song();
 
@@ -235,43 +235,48 @@ namespace GoogleMusic
 
         public SongDifference CompareTo(Song update)
         {
-            var diff = new SongDifference(this.ID)
+            return update - this;
+        }
+
+        public static SongDifference operator -(Song x, Song y)
+        {
+            var diff = new SongDifference(x.ID)
             {
-                Title = GetComparison(this.Title, update.Title),
-                AlbumArt = GetComparison(this.AlbumArt, update.AlbumArt),
-                Artist = GetComparison(this.Artist, update.Artist),
-                Album = GetComparison(this.Album, update.Album),
-                AlbumArtist = GetComparison(this.AlbumArtist, update.AlbumArtist),
-                TitleNorm = GetComparison(this.TitleNorm, update.TitleNorm),
-                ArtistNorm = GetComparison(this.ArtistNorm, update.ArtistNorm),
-                AlbumNorm = GetComparison(this.AlbumNorm, update.AlbumArtistNorm),
-                AlbumArtistNorm = GetComparison(this.AlbumNorm, update.AlbumArtistNorm),
-                Composer = GetComparison(this.Composer, update.Composer), //10
-                Genre = GetComparison(this.Genre, update.Genre),
-                //Duration = GetComparison(this.Duration, update.Duration),
-                Track = GetComparison(this.Track, update.Track),
-                //TotalTracks = GetComparison(this.TotalTracks, update.TotalTracks),
-                Disc = GetComparison(this.Disc, update.Disc),
-                //TotalDiscs = GetComparison(this.TotalDiscs, update.TotalDiscs),
-                Year = GetYearComparison(this.Year, update.Year),
-                IsDeleted = GetComparison(this.IsDeleted, update.IsDeleted),
-                PermanentlyDelete = GetComparison(this.PermanentlyDelete, update.PermanentlyDelete), //20
-                Pending = GetComparison(this.Pending, update.Pending),
-                //Playcount = GetComparison(this.Playcount, update.Playcount),
-                //Rating = GetComparison(this.Rating, update.Rating),
-                //CreationDate = GetComparison(this.CreationDate, update.CreationDate),
-                //LastPlayed = GetComparison(this.LastPlayed, update.LastPlayed),
-                SubjectToCuration = GetComparison(this.SubjectToCuration, update.SubjectToCuration),
-                //StoreID = GetComparison(this.StoreID, update.StoreID),
-                MatchedID = GetComparison(this.MatchedID, update.MatchedID),
-                //Type = GetComparison(this.Type, update.Type),
-                Comment = GetComparison(this.Comment, update.Comment), // 30
-                FixMatchNeeded = GetComparison(this.FixMatchNeeded, update.FixMatchNeeded),
-                MatchedAlbumId = GetComparison(this.MatchedAlbumId, update.MatchedAlbumId),
-                MatchedArtistId = GetComparison(this.MatchedArtistId, update.MatchedArtistId),
-                //Bitrate = GetComparison(this.Bitrate, update.Bitrate),
-                ArtURL = GetComparison(this.ArtURL, update.ArtURL), // 36
-                Explicit = GetComparison(this.Explicit, update.Explicit),
+                Title = GetComparison(x.Title, y.Title),
+                AlbumArt = GetComparison(x.AlbumArt, y.AlbumArt),
+                Artist = GetComparison(x.Artist, y.Artist),
+                Album = GetComparison(x.Album, y.Album),
+                AlbumArtist = GetComparison(x.AlbumArtist, y.AlbumArtist),
+                TitleNorm = GetComparison(x.TitleNorm, y.TitleNorm),
+                ArtistNorm = GetComparison(x.ArtistNorm, y.ArtistNorm),
+                AlbumNorm = GetComparison(x.AlbumNorm, y.AlbumArtistNorm),
+                AlbumArtistNorm = GetComparison(x.AlbumNorm, y.AlbumArtistNorm),
+                Composer = GetComparison(x.Composer, y.Composer), //10
+                Genre = GetComparison(x.Genre, y.Genre),
+                //Duration = GetComparison(x.Duration, y.Duration),
+                Track = GetComparison(x.Track, y.Track),
+                //TotalTracks = GetComparison(x.TotalTracks, y.TotalTracks),
+                Disc = GetComparison(x.Disc, y.Disc),
+                //TotalDiscs = GetComparison(x.TotalDiscs, y.TotalDiscs),
+                Year = GetYearComparison(x.Year, y.Year),
+                IsDeleted = GetComparison(x.IsDeleted, y.IsDeleted),
+                PermanentlyDelete = GetComparison(x.PermanentlyDelete, y.PermanentlyDelete), //20
+                Pending = GetComparison(x.Pending, y.Pending),
+                //Playcount = GetComparison(x.Playcount, y.Playcount),
+                //Rating = GetComparison(x.Rating, y.Rating),
+                //CreationDate = GetComparison(x.CreationDate, y.CreationDate),
+                //LastPlayed = GetComparison(x.LastPlayed, y.LastPlayed),
+                SubjectToCuration = GetComparison(x.SubjectToCuration, y.SubjectToCuration),
+                //StoreID = GetComparison(x.StoreID, y.StoreID),
+                MatchedID = GetComparison(x.MatchedID, y.MatchedID),
+                //Type = GetComparison(x.Type, y.Type),
+                Comment = GetComparison(x.Comment, y.Comment), // 30
+                FixMatchNeeded = GetComparison(x.FixMatchNeeded, y.FixMatchNeeded),
+                MatchedAlbumId = GetComparison(x.MatchedAlbumId, y.MatchedAlbumId),
+                MatchedArtistId = GetComparison(x.MatchedArtistId, y.MatchedArtistId),
+                //Bitrate = GetComparison(x.Bitrate, y.Bitrate),
+                ArtURL = GetComparison(x.ArtURL, y.ArtURL), // 36
+                Explicit = GetComparison(x.Explicit, y.Explicit),
 
             };
             return diff;
@@ -307,14 +312,14 @@ namespace GoogleMusic
             if (diff.Explicit != null) this.Explicit = (bool)diff.Explicit;
         }
 
-        private int? GetYearComparison(int? from, int? to)
+        private static int? GetYearComparison(int? from, int? to)
         {
             if (to.HasValue == false) return null;
             if (from == to) return null;
             return to;
         }
 
-        private T? GetComparison<T>(T? from, T? to) where T : struct, IComparable
+        private static T? GetComparison<T>(T? from, T? to) where T : struct, IComparable
         {
             if (to.HasValue == false) return null;
             if (from.HasValue == false) return to;
@@ -322,13 +327,13 @@ namespace GoogleMusic
             return to;
         }
 
-        private T? GetComparison<T>(T from, T to) where T : struct, IComparable
+        private static T? GetComparison<T>(T from, T to) where T : struct, IComparable
         {
             if (from.CompareTo(to) == 0) return null;
             return to;
         }
 
-        private string GetComparison(string from, string to)
+        private static string GetComparison(string from, string to)
         {
             if (from == to) return null;
             return to;

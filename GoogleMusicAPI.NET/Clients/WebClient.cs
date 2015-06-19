@@ -428,7 +428,7 @@ namespace GoogleMusic.Clients
 
                     foreach (var track in trackArray)
                     {
-                        Song song = Song.BuildFromDynamic(track);
+                        Song song = Song.Build(track);
                         { results.Add(new KeyValuePair<string, Song>(song.ID.ToString(), song)); }
                     }
                 }
