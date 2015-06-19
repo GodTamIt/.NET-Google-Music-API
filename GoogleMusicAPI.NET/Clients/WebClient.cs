@@ -24,10 +24,10 @@ namespace GoogleMusic.Clients
 
         #region Members
         // Constants
-        private Regex AUTH_REGEX;
-        private Regex AUTH_ERROR_REGEX;
-        private Regex AUTH_USER_ID_REGEX;
-        private Regex GET_ALL_SONGS_REGEX;
+        private static readonly Regex AUTH_REGEX = new Regex(@"Auth=(?<AUTH>(.*?))$", RegexOptions.IgnoreCase);
+        private static readonly Regex AUTH_ERROR_REGEX = new Regex(@"Error=(?<ERROR>(.*?))$", RegexOptions.IgnoreCase);
+        private static readonly Regex AUTH_USER_ID_REGEX = new Regex(@"window\['USER_ID'\] = '(?<USERID>(.*?))'", RegexOptions.IgnoreCase);
+        private static readonly Regex GET_ALL_SONGS_REGEX = new Regex(@"window.parent\['slat_process'\]\((?<TRACKS>.*?)\);\nwindow.parent\['slat_progress'\]", RegexOptions.Singleline | RegexOptions.Compiled);
 
         private Http_Old http_old;
         private Http http;
@@ -40,12 +40,6 @@ namespace GoogleMusic.Clients
         {
             http_old = new Http_Old();
             http = new Http();
-
-            
-            AUTH_REGEX = new Regex(@"Auth=(?<AUTH>(.*?))$", RegexOptions.IgnoreCase);
-            AUTH_ERROR_REGEX = new Regex(@"Error=(?<ERROR>(.*?))$", RegexOptions.IgnoreCase);
-            AUTH_USER_ID_REGEX = new Regex(@"window\['USER_ID'\] = '(?<USERID>(.*?))'", RegexOptions.IgnoreCase);
-            GET_ALL_SONGS_REGEX = new Regex(@"window.parent\['slat_process'\]\((?<TRACKS>.*?)\);\nwindow.parent\['slat_progress'\]", RegexOptions.Singleline);
         }
 
         #endregion
@@ -379,14 +373,24 @@ namespace GoogleMusic.Clients
 
         #region GetAllSongs
 
-        public async Task<ICollection<Song>> GetAllSongs(ICollection<Song> results = null)
+        /// <summary>
+        /// Retrieves all songs in the user's library.
+        /// </summary>
+        /// <param name="results">Optional. The collection to add the songs to. The recommended data structure in nearly all cases is <see cref="System.Collections.Generic.HashSet"/>.</param>
+        /// <param name="lockObject">Optional. The object to lock when making writes to <paramref name="results"/>. This is useful when <paramref name="results"/> is not thread-safe.</param>
+        /// <returns>Returns a Task containing the data structure containing the new songs.</returns>
+        public async Task<ICollection<Song>> GetAllSongs(ICollection<Song> results = null, object lockObject = null)
         {
             if (results == null)
+            {
                 results = new HashSet<Song>();
-            
+                // Note: Lock object only if results weren't null. Otherwise, it is unnecessary overhead (since they don't have access to results)
+                lockObject = null;
+            }
+
             string response = await GetAllSongs_Request();
 
-            return await Task.FromResult(GetAllSongs_Parse(response, results));;
+            return await Task.FromResult(GetAllSongs_Parse(response, results, lockObject));
         }
 
         private async Task<string> GetAllSongs_Request()
@@ -396,7 +400,7 @@ namespace GoogleMusic.Clients
             return await http.Client.GetStringAsync(url);
         }
 
-        private ICollection<Song> GetAllSongs_Parse(string javascriptData, ICollection<Song> results)
+        private ICollection<Song> GetAllSongs_Parse(string javascriptData, ICollection<Song> results, object lockObject)
         {
             //Match match = GET_ALL_SONGS_REGEX.Match(javascriptData);
             var match = GET_ALL_SONGS_REGEX.Match(javascriptData);
@@ -413,7 +417,11 @@ namespace GoogleMusic.Clients
                     foreach (var track in trackArray)
                     {
                         Song song = Song.Build(track);
-                        results.Add(song);
+
+                        if (lockObject == null)
+                            results.Add(song);
+                        else
+                            lock (lockObject) { results.Add(song); }
                     }
                 }
                 catch (Exception) { }
@@ -428,7 +436,9 @@ namespace GoogleMusic.Clients
 
         #endregion
 
+        #region GetDeleted
 
+        #endregion
 
     }
 }
