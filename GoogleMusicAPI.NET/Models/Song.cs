@@ -23,7 +23,7 @@ namespace GoogleMusic
         /// <returns></returns>
         public static Song Build(dynamic track)
         {
-            if (track == null || !(track is Array) || track.Count < 47)
+            if (track == null || !((track is JArray && track.Count > 46) || (track is Array && track.Length > 46)))
                 return null;
 
             Song song = new Song();
