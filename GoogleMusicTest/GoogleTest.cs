@@ -52,7 +52,7 @@ namespace GoogleMusicTest
             var result = await client.Login(tbEmail.Text, tbPass.Text);
             Stopwatch watch = new Stopwatch();
             watch.Start();
-            var count = await client.GetAllSongs();
+            var count = await client.GetDeletedSongs();
             watch.Stop();
 
             return;
