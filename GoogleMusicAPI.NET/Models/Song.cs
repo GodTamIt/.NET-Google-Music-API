@@ -233,9 +233,9 @@ namespace GoogleMusic
 
         #region Comaparisons
 
-        public SongDiff CompareTo(Song update)
+        public SongDifference CompareTo(Song update)
         {
-            var diff = new SongDiff(this.ID)
+            var diff = new SongDifference(this.ID)
             {
                 Title = GetComparison(this.Title, update.Title),
                 AlbumArt = GetComparison(this.AlbumArt, update.AlbumArt),
@@ -277,7 +277,7 @@ namespace GoogleMusic
             return diff;
         }
 
-        public void ApplyDiff(SongDiff diff)
+        public void ApplyDiff(SongDifference diff)
         {
             if (diff.ID != null) this.ID = diff.ID;
             if (diff.Title != null) this.Title = diff.Title;

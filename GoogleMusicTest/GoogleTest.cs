@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Net;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using GoogleMusic;
 
 namespace GoogleMusicTest
@@ -16,16 +17,16 @@ namespace GoogleMusicTest
     {
 
         string ClientId = "215459815136.apps.googleusercontent.com";
-        string ClientSecret = "tJ1gxPFfqt6FFvMqXm29QE6T";
+        string ClientSecret = "";
         API api;
 
         public GoogleTest()
         {
             InitializeComponent();
 
-            api = new API(ClientId, ClientSecret);
+            //api = new API(ClientId, ClientSecret);
 
-            Process.Start(api.MusicManager.GetAuthorizationCodeUrl());
+            //Process.Start(api.MusicManager.GetAuthorizationCodeUrl());
 
             //api.DeviceFriendlyName = "test uploader";
             //api.DeviceId = "mm:00:16:E6:88:04:57";
@@ -45,8 +46,16 @@ namespace GoogleMusicTest
 
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private async void button1_Click(object sender, EventArgs e)
         {
+            var client = new GoogleMusic.Clients.WebClient();
+            var result = await client.Login(tbEmail.Text, tbPass.Text);
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+            var count = await client.GetAllSongs();
+            watch.Stop();
+
+            return;
         }
 
         private async void btnLogin_Click(object sender, EventArgs e)

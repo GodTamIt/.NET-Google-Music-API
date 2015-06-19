@@ -25,7 +25,7 @@ namespace GoogleMusic.Clients
         private string _refreshToken;
         private string _accessToken;
 
-        private Http http;
+        private Http_Old http;
         #endregion
 
         #region Constructor
@@ -38,7 +38,7 @@ namespace GoogleMusic.Clients
         /// <exception cref="System.ArgumentException">Thrown when clientId is an empty string or null.</exception>
         public MusicManagerClient(string clientId, string clientSecret)
         {
-            http = new Http();
+            http = new Http_Old();
             http.UserAgent = USER_AGENT;
 
             // Assign property to get error handling
@@ -150,7 +150,7 @@ namespace GoogleMusic.Clients
                     form.AddField("grant_type", "authorization_code");
                     form.AddEnding();
 
-                    HttpWebRequest request = SetupWebRequest("https://accounts.google.com/o/oauth2/token", "POST");
+                    HttpWebRequest request = SetupWebRequest("https://accounts.google.com/o/oauth2/token", Http_Old.POST);
                     response = http.Request(request, form);
                 }
 
@@ -197,7 +197,7 @@ namespace GoogleMusic.Clients
                     form.AddField("grant_type", "authorization_code");
                     form.AddEnding();
 
-                    response = await http.RequestAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token", "POST"), form, cancellationToken);
+                    response = await http.RequestAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token", Http_Old.POST), form, cancellationToken);
                 }
 
                 if (cancellationToken.IsCancellationRequested)
@@ -246,7 +246,7 @@ namespace GoogleMusic.Clients
                     form.AddField("grant_type", "refresh_token");
                     form.AddEnding();
 
-                    response = http.Request(SetupWebRequest("https://accounts.google.com/o/oauth2/token", "POST"), form);
+                    response = http.Request(SetupWebRequest("https://accounts.google.com/o/oauth2/token", Http_Old.POST), form);
                 }
 
                 // Bytes -> String -> JSON
@@ -290,7 +290,7 @@ namespace GoogleMusic.Clients
                     form.AddField("grant_type", "refresh_token");
                     form.AddEnding();
 
-                    response = await http.RequestAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token", "POST"), form, cancellationToken);
+                    response = await http.RequestAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token", Http_Old.POST), form, cancellationToken);
                 }
 
                 if (cancellationToken.IsCancellationRequested)
@@ -333,7 +333,7 @@ namespace GoogleMusic.Clients
 
         #region Web
 
-        private HttpWebRequest SetupWebRequest(string address, string method = "GET")
+        private HttpWebRequest SetupWebRequest(string address, string method = Http_Old.GET)
         {
             HttpWebRequest request = http.CreateRequest(address, method);
 

@@ -470,7 +470,7 @@ namespace GoogleMusic.Net
                     // ProgressHandler: Begin asynchronous invoke
                     IAsyncResult progressHandlerResult = null;
                     if (progressHandler != null)
-                        progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesDone / (double)data.Length), null, null, null);
+                        progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesDone / (double)data.Length), null, null);
 
                     // WriteTask: Start writing to stream asynchronously
                     int nextChunkSize = Math.Min(data.Length - bytesDone, bufferSize);
@@ -603,7 +603,7 @@ namespace GoogleMusic.Net
                         // ProgressHandler: Begin asynchronous invoke
                         IAsyncResult progressHandlerResult = null;
                         if (progressHandler != null)
-                            progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesRead / (double)contentLength), null, null, null);
+                            progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesRead / (double)contentLength), null, null);
 
                         // ReadTask: Start another read asynchronously
                         Task<int> readTask = responseStream.ReadAsync(result, 0, (int)Math.Min(contentLength - bytesRead, bufferSize), cancellationToken);
@@ -634,7 +634,7 @@ namespace GoogleMusic.Net
                             // ProgressHandler: Begin asynchronous invoke
                             IAsyncResult progressHandlerResult = null;
                             if (progressHandler != null && response.ContentLength > 0)
-                                progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesRead / (double)response.ContentLength), null, null, null);
+                                progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)bytesRead / (double)response.ContentLength), null, null);
 
                             // WriteTask: Start writing to memory asynchronously
                             Task writeTask = memory.WriteAsync(buffer, 0, chunkRead, cancellationToken);

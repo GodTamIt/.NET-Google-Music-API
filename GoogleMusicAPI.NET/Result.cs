@@ -2,6 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
+using System.IO.Compression;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Net;
+using System.Net.Cache;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Diagnostics;
+using System.Web;
+using System.Collections;
 using System.Threading.Tasks;
 
 namespace GoogleMusic
@@ -9,7 +21,7 @@ namespace GoogleMusic
     /// <summary>
     /// The delegate type invoked when an asynchronous GoogleMusic function makes progress.
     /// </summary>
-    /// <param name="progress">The new progress to report, in range 0.0 to 1.0.</param>
+    /// <param name="progress">The new percentage progress to report, in the range 0.0 to 1.0.</param>
     public delegate void TaskProgressEventHandler(double progress);
     /// <summary>
     /// The delegate type invoked when an asynchronous GoogleMusic function finishes a task.

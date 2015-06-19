@@ -47,6 +47,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Net" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -58,11 +59,14 @@
     <Compile Include="API.cs" />
     <Compile Include="Clients\IClient.cs" />
     <Compile Include="Clients\MusicManagerClient.cs" />
+    <Compile Include="Models\GoogleMusicSongDiff.cs" />
+    <Compile Include="Models\Song.cs" />
     <Compile Include="Net\FormBuilder.cs" />
+    <Compile Include="Net\Http.cs" />
     <Compile Include="Result.cs" />
     <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="Clients\WebClient.cs" />
-    <Compile Include="Net\Http.cs" />
+    <Compile Include="Net\Http_Old.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

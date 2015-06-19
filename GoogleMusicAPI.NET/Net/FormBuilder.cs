@@ -158,7 +158,7 @@ namespace GoogleMusic.Net
                             // ProgressHandler: Begin asynchronous invoke
                             IAsyncResult progressHandlerResult = null;
                             if (progressHandler != null)
-                                progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, totalRead / (double)_length), null, null);
+                                progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, totalRead / (double)_length), null, null, null);
 
                             // WriteTask: Start writing to stream asynchronously
                             int chunk = (int) Math.Min(memoryStream.Length - readPosition, bufferSize);
@@ -189,7 +189,7 @@ namespace GoogleMusic.Net
                     // ProgressHandler: Begin asynchronous invoke
                     IAsyncResult progressHandlerResult = null;
                     if (progressHandler != null)
-                        progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)totalRead / (double)_length), null, null);
+                        progressHandlerResult = progressHandler.BeginInvoke(Math.Min(1.0, (double)totalRead / (double)_length), null, null, null);
 
                     // WriteTask: Start writing to stream asynchronously
                     Task writeTask = destination.WriteAsync(buffer, 0, chunkRead, cancellationToken);
