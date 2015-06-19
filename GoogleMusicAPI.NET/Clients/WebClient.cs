@@ -302,6 +302,11 @@ namespace GoogleMusic.Clients
 
         #region DeleteSongs
 
+        /// <summary>
+        /// Asynchronously deletes songs from the Google Music library. This delete can be undone (within 28 days of deleting).
+        /// </summary>
+        /// <param name="songs">Required. The enumerable collection of songs to delete.</param>
+        /// <returns>Returns a <see cref="Result"/> containing an enumerable collection of GUIDs that were successfully deleted.</returns>
         public async Task<Result<IEnumerable<Guid>>> DeleteSongs(IEnumerable<Song> songs)
         {
             if (!this.IsLoggedIn)
@@ -354,7 +359,8 @@ namespace GoogleMusic.Clients
             try
             {
                 dynamic results = JsonConvert.DeserializeObject(response);
-                return new Result<IEnumerable<Guid>>(true, results.deleteIds.ToObject<Guid[]>(), this);
+                Guid[] deleted = results.deletedIds.ToObject<Guid[]>();
+                return new Result<IEnumerable<Guid>>(deleted.Length == originalCount, deleted, this);
             }
             catch (Exception e) { return new Result<IEnumerable<Guid>>(false, new Guid[0], this, e); }
         }
