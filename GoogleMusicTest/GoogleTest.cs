@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Net;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using GoogleMusic;
 
 namespace GoogleMusicTest
@@ -50,10 +48,8 @@ namespace GoogleMusicTest
         {
             var client = new GoogleMusic.Clients.WebClient();
             var result = await client.Login(tbEmail.Text, tbPass.Text);
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
+            
             var count = await client.GetDeletedSongs();
-            watch.Stop();
 
             return;
         }
