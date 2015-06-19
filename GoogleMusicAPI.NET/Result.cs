@@ -30,13 +30,6 @@ namespace GoogleMusic
 
     public class Result<T>
     {
-        #region Members
-        private bool _Success;
-        private T _ResultValue;
-        private Clients.IClient _Client;
-        private string _ErrorMessage;
-        private Exception _InnerException;
-        #endregion
 
         #region Constructor
         /// <summary>
@@ -49,11 +42,11 @@ namespace GoogleMusic
         /// <param name="innerException">Optional. The underlying exception thrown by the program on a failure. Value should be null if operation was successful.</param>
         internal Result(bool success, T resultValue, Clients.IClient client, string errorMessage = "", Exception innerException = null)
         {
-            _Success = success;
-            _ResultValue = resultValue;
-            _Client = client;
-            _ErrorMessage = errorMessage;
-            _InnerException = innerException;
+            this.Success = success;
+            this.ResultValue = resultValue;
+            this.Client = client;
+            this.ErrorMessage = errorMessage;
+            this.InnerException = innerException;
         }
         #endregion
 
@@ -62,43 +55,27 @@ namespace GoogleMusic
         /// <summary>
         /// Gets the boolean value representing the operation's success.
         /// </summary>
-        public bool Success
-        {
-            get { return _Success; }
-        }
+        public bool Success { get; protected set; }
 
         /// <summary>
         /// Gets the value returned by the operation.
         /// </summary>
-        public T ResultValue
-        {
-            get { return _ResultValue; }
-            set { _ResultValue = value; }
-        }
+        public T ResultValue { get; protected set; }
 
         /// <summary>
         /// The parent client of the operation executed.
         /// </summary>
-        public Clients.IClient Client
-        {
-            get { return _Client; }
-        }
+        public Clients.IClient Client { get; protected set; }
 
         /// <summary>
         /// A human-readable error message describing a failure. Value is null if operation was successful.
         /// </summary>
-        public string ErrorMessage
-        {
-            get { return _ErrorMessage; }
-        }
+        public string ErrorMessage { get; protected set; }
 
         /// <summary>
         /// The underlying exception thrown by the program on a failure. Value is null if operation was successful.
         /// </summary>
-        public Exception InnerException
-        {
-            get { return _InnerException; }
-        }
+        public Exception InnerException { get; protected set; }
 
         #endregion
     }
