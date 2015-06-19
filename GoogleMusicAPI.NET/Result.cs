@@ -36,14 +36,14 @@ namespace GoogleMusic
         /// Initializes a new instance of Result that represents the outcome of an operation.
         /// </summary>
         /// <param name="success">Required. The boolean value representing the operation's success.</param>
-        /// <param name="resultValue">Required. The value returned by the operation.</param>
+        /// <param name="result">Required. The value returned by the operation.</param>
         /// <param name="client">Required. The parent client of the operation executed.</param>
         /// <param name="errorMessage">Optional. A human-readable error message describing a failure. Value should be empty if operation was successful.</param>
         /// <param name="innerException">Optional. The underlying exception thrown by the program on a failure. Value should be null if operation was successful.</param>
-        internal Result(bool success, T resultValue, Clients.IClient client, string errorMessage = "", Exception innerException = null)
+        internal Result(bool success, T result, Clients.IClient client, string errorMessage = "", Exception innerException = null)
         {
             this.Success = success;
-            this.ResultValue = resultValue;
+            this.Value = result;
             this.Client = client;
             this.ErrorMessage = errorMessage;
             this.InnerException = innerException;
@@ -60,7 +60,7 @@ namespace GoogleMusic
         /// <summary>
         /// Gets the value returned by the operation.
         /// </summary>
-        public T ResultValue { get; protected set; }
+        public T Value { get; protected set; }
 
         /// <summary>
         /// The parent client of the operation executed.
