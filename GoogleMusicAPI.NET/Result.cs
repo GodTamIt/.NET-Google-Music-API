@@ -45,9 +45,9 @@ namespace GoogleMusic
         /// <param name="success">Required. The boolean value representing the operation's success.</param>
         /// <param name="resultValue">Required. The value returned by the operation.</param>
         /// <param name="client">Required. The parent client of the operation executed.</param>
-        /// <param name="errorMessage">Optional. A human-readable error message describing a failure. Value should be null if operation was successful.</param>
+        /// <param name="errorMessage">Optional. A human-readable error message describing a failure. Value should be empty if operation was successful.</param>
         /// <param name="innerException">Optional. The underlying exception thrown by the program on a failure. Value should be null if operation was successful.</param>
-        internal Result(bool success, T resultValue, Clients.IClient client, string errorMessage = null, Exception innerException = null)
+        internal Result(bool success, T resultValue, Clients.IClient client, string errorMessage = "", Exception innerException = null)
         {
             _Success = success;
             _ResultValue = resultValue;
