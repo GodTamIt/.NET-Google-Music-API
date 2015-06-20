@@ -138,6 +138,7 @@ namespace GoogleMusic.Clients
             string xt = http.Settings.CookieContainer.GetCookie("https://play.google.com/music/listen", "xt");
             if (!String.IsNullOrEmpty(xt))
                 url += (url.Contains('?') ? '&' : '?') + "u=0&xt=" + xt;
+            
             return url;
         }
 
@@ -163,12 +164,10 @@ namespace GoogleMusic.Clients
             if (!this.IsLoggedIn)
                 return new Result<int>(false, -1, this, new ClientNotAuthorizedException(this));
 
-            var form = new[] { new KeyValuePair<string, string>("json", String.Format("{{\"sessionId\":\"{0}\"}}", this.SessionId)) };
             string response;
-
             try
             {
-                using (var formContent = new FormUrlEncodedContent(form))
+                using (var formContent = new FormUrlEncodedContent(new[] { new KeyValuePair<string, string>("json", String.Format("{{\"sessionId\":\"{0}\"}}", this.SessionId)) }))
                 {
                     response = await (await http.Client.PostAsync(AppendXt("https://play.google.com/music/services/getstatus"), formContent)).Content.ReadAsStringAsync();
                 }
@@ -384,13 +383,12 @@ namespace GoogleMusic.Clients
 
         private async Task<Result<string>> GetUserPlaylists_Request()
         {
-            KeyValuePair<string, string>[] form = new[] { new KeyValuePair<string, string>(String.Format(@"[[""{0}"",1],[]]", this.SessionId), String.Empty) };
             try
             {
                 string response;
-                using (FormUrlEncodedContent formContent = new FormUrlEncodedContent(form))
+                using (StringContent content = new StringContent(String.Format(@"[[""{0}"",1],[]]", this.SessionId)))
                 {
-                    response = await (await http.Client.PostAsync(AppendXt("https://play.google.com/music/services/loadplaylists"), formContent)).Content.ReadAsStringAsync();
+                    response = await (await http.Client.PostAsync(AppendXt("https://play.google.com/music/services/loadplaylists"), content)).Content.ReadAsStringAsync();
                 }
 
                 return new Result<string>(true, response, this);
@@ -419,7 +417,20 @@ namespace GoogleMusic.Clients
 
         #region GetPlaylistContent
 
+        public async Task<string> GetPlaylistContent(Playlist playlist)
+        {
+            return await GetPlaylistContent_Request(playlist.ID);
+        }
 
+        private async Task<string> GetPlaylistContent_Request(Guid guid)
+        {
+            string form = String.Format(@"[[""{0}"",1],[""{1}""]]", this.SessionId, guid.ToString());
+
+            using (StringContent content = new StringContent(form))
+            {
+                return await (await http.Client.PostAsync(AppendXt("https://play.google.com/music/services/loaduserplaylist?format=jsarray"), content)).Content.ReadAsStringAsync();
+            }
+        }
 
         #endregion
 
