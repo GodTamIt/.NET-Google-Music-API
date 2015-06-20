@@ -144,6 +144,7 @@ namespace GoogleMusic.Clients
         public void Logout()
         {
             http.Settings.CookieContainer.ClearCookies("https://www.google.com/");
+            http.Settings.CookieContainer.ClearCookies("https://www.music.google.com/");
             http.Client.DefaultRequestHeaders.Remove("Authorization");
             this.AuthorizationToken = null;
             this.SessionId = null;
