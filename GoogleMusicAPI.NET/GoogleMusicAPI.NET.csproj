@@ -59,6 +59,7 @@
     <Compile Include="API.cs" />
     <Compile Include="Clients\IClient.cs" />
     <Compile Include="Clients\MusicManagerClient.cs" />
+    <Compile Include="Models\Playlist.cs" />
     <Compile Include="Models\SongDifference.cs" />
     <Compile Include="Models\Song.cs" />
     <Compile Include="Net\FormBuilder.cs" />
