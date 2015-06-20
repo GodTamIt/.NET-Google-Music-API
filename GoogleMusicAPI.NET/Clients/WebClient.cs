@@ -27,7 +27,7 @@ namespace GoogleMusic.Clients
         private static readonly Regex AUTH_REGEX = new Regex(@"Auth=(?<AUTH>(.*?))$", RegexOptions.IgnoreCase);
         private static readonly Regex AUTH_ERROR_REGEX = new Regex(@"Error=(?<ERROR>(.*?))$", RegexOptions.IgnoreCase);
         private static readonly Regex AUTH_USER_ID_REGEX = new Regex(@"window\['USER_ID'\] = '(?<USERID>(.*?))'", RegexOptions.IgnoreCase);
-        private static readonly Regex GET_ALL_SONGS_REGEX = new Regex(@"window.parent\['slat_process'\]\((?<SONGS>.*?)\);\nwindow.parent\['slat_progress'\]", RegexOptions.Singleline);
+        private static readonly Regex GET_ALL_SONGS_REGEX = new Regex(@"window\.parent\['slat_process'\]\((?<SONGS>.+?)\);\s+?window", RegexOptions.Singleline);
 
         private Http_Old http_old;
         private Http http;
@@ -216,7 +216,7 @@ namespace GoogleMusic.Clients
                     // GetAllSongs is located in 0th index
                     parseResult = ParseSongs(0, match.Groups["SONGS"].Value, results, lockResults);
 
-                    if (parseResult.Success)
+                    if (!parseResult.Success)
                         return parseResult;
 
                     match = match.NextMatch();
