@@ -52,8 +52,8 @@ namespace GoogleMusic
             song.Pending = track[21];
             song.PlayCount = track[22] == null ? 0 : track[22];
             song.Rating = track[23] == null ? 0 : track[23];
-            song.CreationDateMicroseconds = track[24];
-            song.LastPlayedMicroseconds = track[25];
+            song.CreationTimestampMicroseconds = track[24];
+            song.LastPlayedTimestampMicroseconds = track[25];
             song.SubjectToCuration = track[26];
             song.StoreID = track[27];
             song.MatchedID = track[28];
@@ -125,8 +125,8 @@ namespace GoogleMusic
         public int? Year { get; set; }
         public int PlayCount { get; set; }
         public int Rating { get; set; }
-        public long CreationDateMicroseconds { get; protected set; }
-        public long? LastPlayedMicroseconds { get; protected set; }
+        public long CreationTimestampMicroseconds { get; protected set; }
+        public long? LastPlayedTimestampMicroseconds { get; protected set; }
         public string StoreID { get; set; }
         public string MatchedID { get; set; }
         public int Type { get; set; }
@@ -174,60 +174,35 @@ namespace GoogleMusic
         [JsonIgnore]
         public DateTime CreationDate
         {
-            get
-            {
-                return FromUnixMicroseconds(this.CreationDateMicroseconds);
-            }
+            get { return FromUnixMicroseconds(this.CreationTimestampMicroseconds); }
         }
 
         [JsonIgnore]
         public DateTime? LastPlayedDateTime
         {
-            get
-            {
-                if (LastPlayedMicroseconds.HasValue)
-                {
-                    return FromUnixMicroseconds(this.LastPlayedMicroseconds.Value);
-                }
-                else
-                {
-                    return null;
-                }
-            }
+            get { return FromUnixMicroseconds(this.LastPlayedTimestampMicroseconds.Value); }
         }
 
         [JsonIgnore]
         public DateTime RecentTimestamp
         {
-            get
-            {
-                return FromUnixMicroseconds(this.RecentTimetampMicroseconds);
-            }
-            set
-            {
-
-            }
+            get { return FromUnixMicroseconds(this.RecentTimetampMicroseconds); }
         }
 
         [JsonIgnore]
         public DateTime? AlbumPlaybackDateTime
         {
-            get
-            {
-                if (AlbumPlaybackTimestamp.HasValue)
-                {
-                    return FromUnixMicroseconds(this.AlbumPlaybackTimestamp.Value);
-                }
-                else
-                {
-                    return null;
-                }
-            }
+            get { return FromUnixMicroseconds(this.AlbumPlaybackTimestamp.Value); }
         }
 
         private static DateTime FromUnixMicroseconds(long microseconds)
         {
             return new DateTime(1970, 01, 01).AddMilliseconds(microseconds / 1000).ToLocalTime();
+        }
+
+        private static DateTime? FromUnixMicroseconds(long? microseconds)
+        {
+            return microseconds.HasValue ? (DateTime?)new DateTime(1970, 01, 01).AddMilliseconds(microseconds.Value / 1000).ToLocalTime() : null;
         }
 
         #endregion
