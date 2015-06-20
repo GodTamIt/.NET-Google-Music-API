@@ -143,31 +143,10 @@ namespace GoogleMusic.Clients
 
         public void Logout()
         {
-            http.Settings.CookieContainer = new CookieContainer();
+            http.Settings.CookieContainer.ClearCookies("https://www.google.com/");
             http.Client.DefaultRequestHeaders.Remove("Authorization");
             this.AuthorizationToken = null;
             this.SessionId = null;
-        }
-
-
-        #endregion
-
-        #region Web
-
-        private HttpWebRequest SetupWebRequest(string address, string method = Http_Old.GET, bool autoRedirect = true)
-        {
-            if (address.Contains("play.google.com/music/services/"))
-                address += (address.Contains('?') ? '&' : '?') + "u=0&xt=";// +_xt;
-            
-
-            HttpWebRequest request = http_old.CreateRequest(address, method);
-
-            request.AllowAutoRedirect = autoRedirect;
-
-            if (!String.IsNullOrEmpty(this.AuthorizationToken))
-                request.Headers[HttpRequestHeader.Authorization] = "GoogleLogin auth=" + this.AuthorizationToken;
-
-            return request;
         }
 
         #endregion
@@ -175,7 +154,7 @@ namespace GoogleMusic.Clients
         #region GetSongCount
 
         /// <summary>
-        /// Retrieves the number of songs in the current Google Music library.
+        /// Asynchronously retrieves the number of songs in the current Google Music library.
         /// </summary>
         /// <returns>Returns a</returns>
         public async Task<Result<int>> GetSongCount()
@@ -203,27 +182,27 @@ namespace GoogleMusic.Clients
         #region GetAllSongs
 
         /// <summary>
-        /// Retrieves all songs in the current Google Music library.
+        /// Asynchronously retrieves all songs in the current Google Music library.
         /// </summary>
-        /// <param name="results">Optional. The collection to add the songs to. The recommended data structure in nearly all cases is <see cref="System.Collections.Generic.HashSet"/>.</param>
-        /// <param name="lockObject">Optional. The object to lock when making writes to <paramref name="results"/>. This is useful when <paramref name="results"/> is not thread-safe.</param>
+        /// <param name="results">Optional. The collection to add the songs to. The recommended data structure in nearly all cases is <see cref="System.Collections.Generic.Dictionary"/>.</param>
+        /// <param name="lockResults">Optional. The object to lock when making writes to <paramref name="results"/>. This is useful when <paramref name="results"/> is not thread-safe.</param>
         /// <returns>Returns a Task containing a <see cref="Result"/> object with the resulting collection of songs if successful.</returns>
-        public async Task<Result<ICollection<Song>>> GetAllSongs(ICollection<Song> results = null, object lockObject = null)
+        public async Task<Result<ICollection<KeyValuePair<Guid, Song>>>> GetAllSongs(ICollection<KeyValuePair<Guid, Song>> results = null, object lockResults = null)
         {
             if (!this.IsLoggedIn)
-                return new Result<ICollection<Song>>(false, results, this);
+                return new Result<ICollection<KeyValuePair<Guid, Song>>>(false, results, this);
 
             if (results == null)
             {
-                results = new HashSet<Song>();
+                results = new Dictionary<Guid, Song>();
                 // Note: Lock object only if results weren't null. Otherwise, it is unnecessary overhead (since they don't have access to results)
-                lockObject = null;
+                lockResults = null;
             }
             
             // Step 1: Get response from Google
             var response = await GetAllSongs_Request();
             if (!response.Success)
-                return new Result<ICollection<Song>>(response.Success, results, response.Client, response.InnerException);
+                return new Result<ICollection<KeyValuePair<Guid, Song>>>(response.Success, results, response.Client, response.InnerException);
 
 
             // Step 2: Asynchronously parse result
@@ -235,7 +214,7 @@ namespace GoogleMusic.Clients
                 while (match.Success)
                 {
                     // GetAllSongs is located in 0th index
-                    parseResult = ParseSongs(0, match.Groups["SONGS"].Value, results, lockObject);
+                    parseResult = ParseSongs(0, match.Groups["SONGS"].Value, results, lockResults);
 
                     if (parseResult.Success)
                         return parseResult;
@@ -245,7 +224,7 @@ namespace GoogleMusic.Clients
                 return new Result<bool>(true, true, this);
             });
 
-            return new Result<ICollection<Song>>(parse.Success, results, this, parse.InnerException);
+            return new Result<ICollection<KeyValuePair<Guid, Song>>>(parse.Success, results, this, parse.InnerException);
         }
 
         private async Task<Result<string>> GetAllSongs_Request()
@@ -263,27 +242,33 @@ namespace GoogleMusic.Clients
 
         #endregion
 
-        #region GetDeleted
+        #region GetDeletedSongs
 
-        public async Task<Result<ICollection<Song>>> GetDeletedSongs(ICollection<Song> results = null, object lockObject = null)
+        /// <summary>
+        /// Asynchronously retrieves the deleted songs from the Google Music library.
+        /// </summary>
+        /// <param name="results">Optional. The collection to add the songs to. The recommended data structure in nearly all cases is <see cref="System.Collections.Generic.Dictionary"/>.</param>
+        /// <param name="lockResults">Optional. The object to lock when making writes to <paramref name="results"/>. This is useful when <paramref name="results"/> is not thread-safe.</param>
+        /// <returns></returns>
+        public async Task<Result<ICollection<KeyValuePair<Guid, Song>>>> GetDeletedSongs(ICollection<KeyValuePair<Guid, Song>> results = null, object lockResults = null)
         {
             if (!this.IsLoggedIn)
-                return new Result<ICollection<Song>>(false, results, this, new ClientNotAuthorizedException(this));
+                return new Result<ICollection<KeyValuePair<Guid, Song>>>(false, results, this, new ClientNotAuthorizedException(this));
             else if (results == null)
             {
-                results = new HashSet<Song>();
+                results = new Dictionary<Guid, Song>();
                 // Note: Lock object only if results weren't null. Otherwise, it is unnecessary overhead (since they don't have access to results)
-                lockObject = null;
+                lockResults = null;
             }
 
             var requestResult = await GetDeletedSongs_Request();
             if (!requestResult.Success)
-                return new Result<ICollection<Song>>(requestResult.Success, results, this, requestResult.InnerException);
+                return new Result<ICollection<KeyValuePair<Guid, Song>>>(requestResult.Success, results, this, requestResult.InnerException);
 
 
-            var parseResult = await Task.Run(() => ParseSongs(1, requestResult.Value, results, lockObject));
+            var parseResult = await Task.Run(() => ParseSongs(1, requestResult.Value, results, lockResults));
 
-            return new Result<ICollection<Song>>(parseResult.Success, results, this, parseResult.InnerException);
+            return new Result<ICollection<KeyValuePair<Guid, Song>>>(parseResult.Success, results, this, parseResult.InnerException);
         }
 
         private async Task<Result<string>> GetDeletedSongs_Request()
@@ -367,9 +352,79 @@ namespace GoogleMusic.Clients
 
         #endregion
 
+        #region CreatePlaylist
+
+        
+        #endregion
+
+        #region GetUserPlaylists
+
+        /// <summary>
+        /// Asynchronously gets the user-created playlists from the Google Music library. Note that the playlist's contents (songs) are not retrieved.
+        /// </summary>
+        /// <param name="results">Optional. The collection to add the playlists to. The recommended data structure in nearly all cases is <see cref="System.Collections.Generic.Dictionary"/>.</param>
+        /// <param name="lockResults">Optional. The object to lock when making writes to <paramref name="results"/>. This is useful when <paramref name="results"/> is not thread-safe.</param>
+        /// <returns></returns>
+        public async Task<Result<ICollection<KeyValuePair<Guid, Playlist>>>> GetUserPlaylists(ICollection<KeyValuePair<Guid, Playlist>> results = null, object lockResults = null)
+        {
+            if (!this.IsLoggedIn)
+                return new Result<ICollection<KeyValuePair<Guid, Playlist>>>(false, results, this, new ClientNotAuthorizedException(this));
+            else if (results == null)
+                results = new Dictionary<Guid, Playlist>();
+
+            var requestResult = await GetUserPlaylists_Request();
+            if (!requestResult.Success)
+                return new Result<ICollection<KeyValuePair<Guid, Playlist>>>(requestResult.Success, results, this, requestResult.InnerException);
+
+            var parseResult = await Task.Run(() => GetUserPlaylists_Parse(requestResult.Value, results, lockResults));
+
+            return new Result<ICollection<KeyValuePair<Guid, Playlist>>>(parseResult.Success, results, this, parseResult.InnerException); ;
+        }
+
+        private async Task<Result<string>> GetUserPlaylists_Request()
+        {
+            KeyValuePair<string, string>[] form = new[] { new KeyValuePair<string, string>(String.Format(@"[[""{0}"",1],[]]", this.SessionId), String.Empty) };
+            try
+            {
+                string response;
+                using (FormUrlEncodedContent formContent = new FormUrlEncodedContent(form))
+                {
+                    response = await (await http.Client.PostAsync(AppendXt("https://play.google.com/music/services/loadplaylists"), formContent)).Content.ReadAsStringAsync();
+                }
+
+                return new Result<string>(true, response, this);
+            }
+            catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
+        }
+
+        private Result<bool> GetUserPlaylists_Parse(string json, ICollection<KeyValuePair<Guid, Playlist>> results, object lockResults)
+        {
+            try
+            {
+                dynamic deserialized = JsonConvert.DeserializeObject(json);
+                Playlist[] playlists = deserialized["playlist"].ToObject<Playlist[]>();
+
+                if (lockResults == null)
+                    foreach (Playlist playlist in playlists) results.Add(new KeyValuePair<Guid, Playlist>(playlist.ID, playlist));
+                else
+                    lock (lockResults) { foreach (Playlist playlist in playlists) results.Add(new KeyValuePair<Guid, Playlist>(playlist.ID, playlist)); }
+                
+                return new Result<bool>(true, true, this);
+            }
+            catch (Exception e) { return new Result<bool>(false, false, this, e); }
+        }
+
+        #endregion
+
+        #region GetPlaylistContent
+
+
+
+        #endregion
+
         #region Parsing
 
-        private static Result<bool> ParseSongs(int arrayIndex, string javascriptData, ICollection<Song> results, object lockObject)
+        private static Result<bool> ParseSongs(int arrayIndex, string javascriptData, ICollection<KeyValuePair<Guid, Song>> results, object lockResults)
         {
             if (javascriptData == null)
                 return new Result<bool>(false, false, null);
@@ -397,10 +452,10 @@ namespace GoogleMusic.Clients
 
                     if (song != null)
                     {
-                        if (lockObject == null)
-                            results.Add(song);
+                        if (lockResults == null)
+                            results.Add(new KeyValuePair<Guid, Song>(song.ID, song));
                         else
-                            lock (lockObject) { results.Add(song); }
+                            lock (lockResults) { results.Add(new KeyValuePair<Guid, Song>(song.ID, song)); }
                     }
                 }
                 catch (Exception) { }

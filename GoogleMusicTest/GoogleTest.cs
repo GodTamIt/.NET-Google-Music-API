@@ -48,15 +48,15 @@ namespace GoogleMusicTest
         {
             var client = new GoogleMusic.Clients.WebClient();
             var result = await client.Login(tbEmail.Text, tbPass.Text);
-            
-            var count = await client.GetDeletedSongs();
+
+            var delete = await client.GetUserPlaylists();
 
             return;
         }
 
         private async void btnLogin_Click(object sender, EventArgs e)
         {
-            MessageBox.Show((await api.LoginAsync(tbEmail.Text, tbPass.Text, tbCode.Text)).ToString());
+            MessageBox.Show((await api.Login(tbEmail.Text, tbPass.Text, tbCode.Text)).ToString());
         }
 
         private void btnCreatePl_Click(object sender, EventArgs e)
