@@ -47,9 +47,11 @@ namespace GoogleMusicTest
         private async void button1_Click(object sender, EventArgs e)
         {
             var client = new GoogleMusic.Clients.WebClient();
-            var result = await client.Login(tbEmail.Text, tbPass.Text);
+            var login = await client.Login(tbEmail.Text, tbPass.Text);
 
-            var delete = await client.GetUserPlaylists();
+            var playlists = await client.GetUserPlaylists();
+
+            var load = await client.GetPlaylistContent(playlists.Value.First().Value);
 
             return;
         }
