@@ -193,12 +193,12 @@ namespace GoogleMusic.Clients
             if (!this.IsLoggedIn)
                 return new Result<IDictionary<Guid, Song>>(false, results, this);
             
-            // Step 1: Get response from Google (90%)
+            // Step 1: Get response from Google
             var response = await GetAllSongs_Request(progress, cancellationToken);
             if (!response.Success)
                 return new Result<IDictionary<Guid, Song>>(response.Success, results, response.Client, response.InnerException);
 
-            // Step 2: Asynchronously parse result (10%)
+            // Step 2: Asynchronously parse result
             var parse = await Task.Run(() => GetAllSongs_Parse(response.Value, ref results, lockResults, progress));
 
             return new Result<IDictionary<Guid, Song>>(parse.Success, results, this, parse.InnerException);
