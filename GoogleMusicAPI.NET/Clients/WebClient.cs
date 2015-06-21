@@ -68,7 +68,10 @@ namespace GoogleMusic.Clients
         /// <param name="email">Required. The email address of the Google account to log into.</param>
         /// <param name="password">Required. The password of the Google account to log into.</param>
         /// <param name="cancellationToken">Optional. The token to monitor for cancellation requests.</param>
-        /// <returns>A Result object indicating whether the login was successful.</returns>
+        /// <returns>
+        /// A task that represents the asynchronous request. The value of the <code>TResult</code> parameter contains a <code>Result</code> object with the outcome of the request.
+        /// The value of <code>Result</code> is a string that contains additional error information, if the login failed.
+        /// </returns>
         public async Task<Result<string>> Login(string email, string password, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Step 1: Get authorization token
@@ -199,19 +202,18 @@ namespace GoogleMusic.Clients
                 return new Result<IDictionary<Guid, Song>>(response.Success, results, response.Client, response.InnerException);
 
             // Step 2: Asynchronously parse result
-            var parse = await Task.Run(() => GetAllSongs_Parse(response.Value, ref results, lockResults, progress));
+            var parse = await Task.Run(() => GetAllSongs_Parse(response.Value, ref results, lockResults, progress), cancellationToken);
 
             return new Result<IDictionary<Guid, Song>>(parse.Success, results, this, parse.InnerException);
         }
 
         private async Task<Result<string>> GetAllSongs_Request(IProgress<double> progress, CancellationToken cancellationToken, double progressMin = 0.0, double progressMax = 80.0)
         {
+            string url = AppendXt(
+                String.Format(@"https://play.google.com/music/services/streamingloadalltracks?json={{""tier"":1,""requestCause"":1,""requestType"":1,""sessionId"":""{0}""}}&format=jsarray",
+                this.SessionId));
             try
             {
-                string url = AppendXt(
-                    String.Format(@"https://play.google.com/music/services/streamingloadalltracks?json={{""tier"":1,""requestCause"":1,""requestType"":1,""sessionId"":""{0}""}}&format=jsarray",
-                    this.SessionId));
-
                 var responseContent = (await http.Client.GetAsync(url, cancellationToken)).Content;
 
                 StringBuilder builder = await (await responseContent.ReadAsStreamAsync()).CopyToAsync(new StringBuilder(), responseContent.Headers.ContentLength, progress, progressMin, progressMax, cancellationToken);
@@ -238,13 +240,13 @@ namespace GoogleMusic.Clients
             if (matches.Count > 5)
             {
                 // If: Over 5k songs, parallelize
-                var parsedArray = new List<KeyValuePair<Guid, Song>>[matches.Count];
+                var parsedArray = new List<Song>[matches.Count];
 
                 Parallel.For(0, matches.Count, (index) =>
                     {
-                        parsedArray[index] = new List<KeyValuePair<Guid, Song>>(1000);
+                        parsedArray[index] = new List<Song>(1000);
 
-                        var tempResult = ParseSongs(0, matches[index].Groups["SONGS"].Value, parsedArray[index], null);
+                        var tempResult = ParseSongs(0, matches[index].Groups["SONGS"].Value, (song) => parsedArray[index].Add(song), null);
                         if (!tempResult.Success)
                             parseResult = tempResult;
                     });
@@ -271,7 +273,7 @@ namespace GoogleMusic.Clients
                     for (int i = 0; i < parsedArray.Length; ++i)
                     {
                         foreach (var element in parsedArray[i])
-                            results.Add(element);
+                            results.Add(element.ID, element);
 
                         if (progress != null)
                             progress.Report((progressMax - progressMin) * ((double)(i + 1) / (double)parsedArray.Length) + progressMin);
@@ -281,11 +283,12 @@ namespace GoogleMusic.Clients
             }
             else
             {
+                var derefResults = results;
                 // Else: 5k songs or under, probably not worth the overhead of parallelization
                 for (int i = 0; i < matches.Count; ++i)
                 {
                     // GetAllSongs is located in 0th index
-                    parseResult = ParseSongs(0, matches[i].Groups["SONGS"].Value, results, lockResults);
+                    parseResult = ParseSongs(0, matches[i].Groups["SONGS"].Value, (song) => derefResults.Add(song.ID, song), lockResults);
 
                     if (progress != null)
                         progress.Report((progressMax - progressMin) * ((double)(i + 1) / (double)matches.Count) + progressMin);
@@ -324,13 +327,10 @@ namespace GoogleMusic.Clients
             if (!requestResult.Success)
                 return new Result<IDictionary<Guid, Song>>(requestResult.Success, results, this, requestResult.InnerException);
 
-            // Step 2: Monitor CancellationToken
-            cancellationToken.ThrowIfCancellationRequested();
-
-            // Step 3: Parse streamed JSArray
+            // Step 2: Parse streamed JSArray
             Result<bool> parseResult;
             using (requestResult.Value)
-                parseResult = await Task.Run(() => ParseSongs(1, requestResult.Value, results, lockResults, progress, 25.0, 100.0));
+                parseResult = await Task.Run(() => ParseSongs(1, requestResult.Value, (song) => results.Add(song.ID, song), lockResults, progress, 25.0, 100.0), cancellationToken);
 
             return new Result<IDictionary<Guid, Song>>(parseResult.Success, results, this, parseResult.InnerException);
         }
@@ -380,7 +380,7 @@ namespace GoogleMusic.Clients
             return await Task.Run(() => DeleteSongs_ParseResponse(requestResult.Value, songs.Count()));
         }
 
-        private async Task DeleteSongs_BuildJson(IEnumerable<Song> songs, Stream stream)
+        private void DeleteSongs_BuildJson(IEnumerable<Song> songs, Stream stream)
         {
             //string[] guids = new string[songs.Count()];
             //{
@@ -400,7 +400,7 @@ namespace GoogleMusic.Clients
             using (var streamWriter = new StreamWriter(stream))
             using (var jsonWriter = new JsonTextWriter(streamWriter))
             {
-                await streamWriter.WriteAsync("json=");
+                streamWriter.Write("json=");
 
                 jsonWriter.WriteStartObject(); // {
                 
@@ -428,13 +428,13 @@ namespace GoogleMusic.Clients
 
         private async Task<Result<Stream>> DeleteSongs_Request(IEnumerable<Song> songs)
         {
+            string url = AppendXt("https://play.google.com/music/services/deletesong");
             Stream response;
             try
             {
-                using (var streamContent = new PushStreamContent(async (stream, httpContent, transportContext) => await DeleteSongs_BuildJson(songs, stream), "application/x-www-form-urlencoded"))
+                using (var streamContent = new PushStreamContent(async (stream, httpContent, transportContext) => await Task.Run(() => DeleteSongs_BuildJson(songs, stream)), "application/x-www-form-urlencoded"))
                 {
-                    
-                    response = await (await http.Client.PostAsync(AppendXt("https://play.google.com/music/services/deletesong"), streamContent)).Content.ReadAsStreamAsync();
+                    response = await (await http.Client.PostAsync(url, streamContent)).Content.ReadAsStreamAsync();
                 }
             }
             catch (Exception e) { return new Result<Stream>(false, null, this, e); }
@@ -464,7 +464,141 @@ namespace GoogleMusic.Clients
 
         #region CreatePlaylist
 
-        
+        public async Task<Result<Playlist>> CreatePlaylist(string title, string description = null, IEnumerable<Song> songs = null)
+        {
+            if (String.IsNullOrEmpty(title))
+                return new Result<Playlist>(false, null, this, new ArgumentException("Argument cannot be null or empty.", "name"));
+
+            // Step 1: Send request to server
+            var requestResult = await CreatePlaylist_Request(title, description, songs);
+            if (!requestResult.Success)
+                return new Result<Playlist>(requestResult.Success, null, this, requestResult.InnerException);
+
+            // Step 2: Parse result from server and create playlist
+            using (requestResult.Value)
+                return await Task.Run(() => CreatePlaylist_ParseResponse(title, description, requestResult.Value, songs));
+        }
+
+        private void CreatePlaylist_BuildJson(string title, string description, IEnumerable<Song> songs, Stream stream)
+        {
+            using (var streamWriter = new StreamWriter(stream))
+            using (var jsonWriter = new JsonTextWriter(streamWriter))
+            {
+                jsonWriter.WriteStartArray(); // [
+
+                // ["sessionId",1]
+                jsonWriter.WriteStartArray();
+                jsonWriter.WriteValue(this.SessionId);
+                jsonWriter.WriteValue(1);
+                jsonWriter.WriteEndArray();
+
+                // [null, "Name", "Description",
+                jsonWriter.WriteStartArray();
+                jsonWriter.WriteNull();
+                jsonWriter.WriteValue(title);
+                jsonWriter.WriteValue(description);
+
+                // [["Song-Guid", (int)songType], [...]]
+                jsonWriter.WriteStartArray();
+                if (songs != null)
+                {
+                    foreach (Song song in songs)
+                    {
+                        jsonWriter.WriteStartArray();
+                        jsonWriter.WriteValue(song.ID);
+                        jsonWriter.WriteValue(song.Type);
+                        jsonWriter.WriteEndArray();
+                    }
+                }
+                jsonWriter.WriteEndArray();
+
+                jsonWriter.WriteEndArray(); //]
+                jsonWriter.WriteEndArray(); //]
+            }
+        }
+
+        private async Task<Result<Stream>> CreatePlaylist_Request(string title, string description, IEnumerable<Song> songs)
+        {
+            string url = AppendXt("https://play.google.com/music/services/createplaylist?format=jsarray");
+            Stream response;
+            try
+            {
+                using (var streamContent = new PushStreamContent(async (stream, httpContent, transportContext) => await Task.Run(() => CreatePlaylist_BuildJson(title, description, songs, stream)), "application/x-www-form-urlencoded"))
+                {
+                    response = await (await http.Client.PostAsync(url, streamContent)).Content.ReadAsStreamAsync();
+                }
+            }
+            catch (Exception e) { return new Result<Stream>(false, null, this, e); }
+
+            return new Result<Stream>(true, response, this);
+        }
+
+        private Result<Playlist> CreatePlaylist_ParseResponse(string title, string description, Stream response, IEnumerable<Song> songs)
+        {
+            try
+            {
+                JArray deserialized;
+                using (StreamReader streamReader = new StreamReader(response))
+                using (var jsonTextReader = new JsonTextReader(streamReader))
+                {
+                    var jsonSerializer = new JsonSerializer();
+                    deserialized = jsonSerializer.Deserialize<JArray>(jsonTextReader);
+                }
+
+                Playlist playlist = new Playlist();
+
+                playlist.Title = title;
+                playlist.Description = (description == null ? String.Empty : description);
+
+                playlist.ID = deserialized[1][0].ToObject<Guid>();
+
+                playlist.SharedToken = deserialized[1][1].ToObject<string>();
+                int songCount = songs == null ? -1 : songs.Count();
+                if (songs.Count() > 0)
+                {
+                    // Initialize new list for songs
+                    playlist.Songs = new List<Song>(songCount);
+
+                    // Record all GUIDs in dictionary (hashtable) for fast lookup
+                    var playlistIDs = new Dictionary<Guid, Guid>(songCount);
+                    {
+                        object[][] tracks = deserialized[1][2].ToObject<object[][]>();
+                        foreach (var track in tracks)
+                            playlistIDs.Add(new Guid(track[0].ToString()), new Guid(track[2].ToString()));
+                    }
+
+                    // Go over each song, add playlist ID, and then add it to the playlist
+                    foreach (var song in songs)
+                    {
+                        Guid playlistId;
+                        if (playlistIDs.TryGetValue(song.ID, out playlistId))
+                        {
+                            song.PlaylistEntryId = playlistId.ToString();
+                            playlist.Songs.Add(song);
+                        }
+                    }
+                }
+                else
+                {
+                    playlist.Songs = new List<Song>();
+                }
+
+                // Timestamps
+                {
+                    long timestamp = deserialized[1][3].ToObject<long>();
+                    playlist.CreationTimestampMicroseconds = timestamp;
+                    playlist.LastModifiedTimestampMicroseconds = timestamp;
+                    playlist.RecentTimestampMicrseconds = timestamp;
+                }
+
+                // Unlisted property
+                playlist.Type = 1;
+
+                return new Result<Playlist>(true, playlist, this);
+            }
+            catch (Exception e) { return new Result<Playlist>(false, null, this, e); }
+        }
+
         #endregion
 
         #region GetUserPlaylists
@@ -474,7 +608,7 @@ namespace GoogleMusic.Clients
         /// </summary>
         /// <param name="results">Optional. The collection to add the playlists to. The recommended data structure in nearly all cases is <see cref="System.Collections.Generic.Dictionary"/>.</param>
         /// <param name="lockResults">Optional. The object to lock when making writes to <paramref name="results"/>. This is useful when <paramref name="results"/> is not thread-safe.</param>
-        /// <returns></returns>
+        /// <returns>A task that represents the asynchronous request. The value of the <code>TResult</code> parameter contains a <code>Result</code> object with the outcome of the request.</returns>
         public async Task<Result<IDictionary<Guid, Playlist>>> GetUserPlaylists(IDictionary<Guid, Playlist> results = null, object lockResults = null, IProgress<double> progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (!this.IsLoggedIn)
@@ -487,13 +621,10 @@ namespace GoogleMusic.Clients
             if (!requestResult.Success)
                 return new Result<IDictionary<Guid, Playlist>>(requestResult.Success, results, this, requestResult.InnerException);
 
-            // Step 2: Check CancellationToken
-            cancellationToken.ThrowIfCancellationRequested();
-
-            // Step 3: Parse streamed JSON
+            // Step 2: Parse streamed JSON
             Result<bool> parseResult;
             using (requestResult.Value)
-                parseResult = await Task.Run(() => GetUserPlaylists_Parse(requestResult.Value, results, lockResults, progress));
+                parseResult = await Task.Run(() => GetUserPlaylists_Parse(requestResult.Value, results, lockResults, progress), cancellationToken);
 
             return new Result<IDictionary<Guid, Playlist>>(parseResult.Success, results, this, parseResult.InnerException);
         }
@@ -552,23 +683,29 @@ namespace GoogleMusic.Clients
 
         #region GetPlaylistContent
 
-        public async Task<Result<Dictionary<Guid, Song>>> GetPlaylistSongs(Playlist playlist, IProgress<double> progress = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Result<List<Song>>> GetPlaylistSongs(Playlist playlist, IProgress<double> progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (!this.IsLoggedIn)
-                return new Result<Dictionary<Guid, Song>>(false, null, this, new ClientNotAuthorizedException(this));
+                return new Result<List<Song>>(false, null, this, new ClientNotAuthorizedException(this));
             else if (playlist == null)
                 throw new ArgumentNullException("playlist");
 
+            // Step 1: Get data from server
             var requestResult = await GetPlaylistSongs_Request(playlist.ID, progress, cancellationToken);
             if (!requestResult.Success)
-                return new Result<Dictionary<Guid, Song>>(requestResult.Success, null, this, requestResult.InnerException);
+                return new Result<List<Song>>(requestResult.Success, null, this, requestResult.InnerException);
 
+            // Step 2: Initialize playlist songs if needed
+            if (playlist.Songs == null)
+                playlist.Songs = new List<Song>();
+
+            // Step 3: Parse results from data
             Result<bool> parseResult;
             using (requestResult.Value)
-                parseResult = await Task.Run(() => ParseSongs(1, requestResult.Value, playlist.Songs, null, progress, 80.0, 100.0));
-            
-            
-            return new Result<Dictionary<Guid, Song>>(parseResult.Success, playlist.Songs, this, parseResult.InnerException);
+                parseResult = await Task.Run(() => ParseSongs(1, requestResult.Value, (song) => playlist.Songs.Add(song), null, progress, 80.0, 100.0), cancellationToken);
+
+
+            return new Result<List<Song>>(parseResult.Success, playlist.Songs, this, parseResult.InnerException);
         }
 
         private async Task<Result<Stream>> GetPlaylistSongs_Request(Guid guid, IProgress<double> progress, CancellationToken cancellationToken, double progressMin = 0.0, double progressMax = 80.0)
@@ -591,74 +728,31 @@ namespace GoogleMusic.Clients
 
         #region Parsing
 
-        private static Result<bool> ParseSongs(int arrayIndex, string javascriptData, ICollection<KeyValuePair<Guid, Song>> results, object lockResults, IProgress<double> progress = null, double progressMin = 0.0,  double progressMax = 100.0)
+        private static Result<bool> ParseSongs(int arrayIndex, string javascriptData, Action<Song> addResult, object lockResults, IProgress<double> progress = null, double progressMin = 0.0, double progressMax = 100.0)
         {
-            if (javascriptData == null)
-                return new Result<bool>(false, false, null);
-
-            JArray trackArray;
-            try
-            {
-                dynamic jsonData = JsonConvert.DeserializeObject(javascriptData);
-                //dynamic jsonData = JsonConvert.DeserializeObject("{stringArray:" + javascriptData + "}");
-                //trackArray = (JArray)jsonData.stringArray[arrayIndex];
-
-                trackArray = (JArray)jsonData[arrayIndex];
-
-                while (trackArray[0] is JArray && trackArray[0][0] is JArray)
-                    trackArray = (JArray) trackArray[0];
-
-            }
-            catch (Exception e) { return new Result<bool>(false, false, null, e); }
-
-            if (progress != null)
-            {
-                double report = (progressMax - progressMin) * 0.5 + progressMin;
-                progress.Report(report);
-                progressMin = report;
-            }
-
-            bool lockWasTaken = false;
-            try
-            {
-                if (lockResults != null)
-                    Monitor.Enter(lockResults);
-
-                for (int i = 0; i < trackArray.Count; ++i)
-                {
-                    try
-                    {
-                        Song song = Song.Build(trackArray[i]);
-
-                        if (song != null)
-                            results.Add(new KeyValuePair<Guid, Song>(song.ID, song));
-                    }
-                    catch (Exception) { }
-
-                    if (progress != null)
-                        progress.Report((progressMax - progressMin) * ((double)(i + 1) / (double)trackArray.Count) + progressMin);
-                }
-            }
-            finally { if (lockWasTaken) Monitor.Exit(lockResults); }
-
-            return new Result<bool>(true, true, null);
+            return ParseSongs(arrayIndex, () => { return JsonConvert.DeserializeObject(javascriptData); }, addResult, lockResults, progress, progressMin, progressMax);
         }
 
-        private static Result<bool> ParseSongs(int arrayIndex, Stream javascriptStream, ICollection<KeyValuePair<Guid, Song>> results, object lockResults, IProgress<double> progress = null, double progressMin = 0.0, double progressMax = 100.0)
+        private static Result<bool> ParseSongs(int arrayIndex, Stream javascriptStream, Action<Song> addResult, object lockResults, IProgress<double> progress = null, double progressMin = 0.0, double progressMax = 100.0)
         {
-            if (javascriptStream == null)
-                return new Result<bool>(false, false, null);
+            return ParseSongs(arrayIndex, () =>
+                {
+                    using (StreamReader streamReader = new StreamReader(javascriptStream))
+                    using (var jsonTextReader = new JsonTextReader(streamReader))
+                    {
+                        var jsonSerializer = new JsonSerializer();
+                        return jsonSerializer.Deserialize(jsonTextReader);
+                    }
+                }, 
+                    addResult, lockResults, progress, progressMin, progressMax);
+        }
 
+        private static Result<bool> ParseSongs(int arrayIndex, Func<dynamic> dynamicFunc, Action<Song> addResult, object lockResults, IProgress<double> progress, double progressMin, double progressMax)
+        {
             JArray trackArray;
             try
             {
-                dynamic jsonData;
-                using (StreamReader streamReader = new StreamReader(javascriptStream))
-                using (var jsonTextReader = new JsonTextReader(streamReader))
-                {
-                    var jsonSerializer = new JsonSerializer();
-                    jsonData = jsonSerializer.Deserialize(jsonTextReader);
-                }
+                dynamic jsonData = dynamicFunc.Invoke();
 
                 //dynamic jsonData = JsonConvert.DeserializeObject("{stringArray:" + javascriptData + "}");
                 //trackArray = (JArray)jsonData.stringArray[arrayIndex];
@@ -691,7 +785,7 @@ namespace GoogleMusic.Clients
                         Song song = Song.Build(trackArray[i]);
 
                         if (song != null)
-                            results.Add(new KeyValuePair<Guid, Song>(song.ID, song));
+                            addResult.Invoke(song);
                     }
                     catch (Exception) { }
 

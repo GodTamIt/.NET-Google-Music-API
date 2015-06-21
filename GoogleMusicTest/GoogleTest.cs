@@ -61,14 +61,14 @@ namespace GoogleMusicTest
             foreach (var pair in allsongs.Value)
             {
                 toDelete.Add(pair.Value);
-                if (++i > 3) break;
+                if (++i >= 100) break;
             }
 
-            var delete = await client.DeleteSongs(toDelete);
+            //var createPlaylist = await client.CreatePlaylist("Distinct playlist right here?", "I have a dream", toDelete);
 
-            //var playlists = await client.GetUserPlaylists();
+            var playlists = await client.GetUserPlaylists();
 
-            //var load = await client.GetPlaylistSongs(playlists.Value.First().Value);
+            var load = await client.GetPlaylistSongs(playlists.Value.First().Value);
 
             return;
         }
