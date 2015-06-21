@@ -56,14 +56,14 @@ namespace GoogleMusic
 
         #region Properties: Songs
 
-        private List<Song> _songs;
-        public List<Song> Songs
+        private Dictionary<Guid, Song> _songs;
+        public Dictionary<Guid, Song> Songs
         {
             get { return _songs; }
             set
             {
-                if (value == null)
-                    _songs = new List<Song>();
+                if (value == null && _songs != null)
+                    _songs = new Dictionary<Guid, Song>();
                 else
                     _songs = value;
             }
