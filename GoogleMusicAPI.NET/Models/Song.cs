@@ -197,12 +197,12 @@ namespace GoogleMusic
 
         private static DateTime FromUnixMicroseconds(long microseconds)
         {
-            return new DateTime(1970, 01, 01).AddMilliseconds(microseconds / 1000).ToLocalTime();
+            return new DateTime(1970, 01, 01).AddTicks(microseconds * (TimeSpan.TicksPerMillisecond / 1000)).ToLocalTime();
         }
 
         private static DateTime? FromUnixMicroseconds(long? microseconds)
         {
-            return microseconds.HasValue ? (DateTime?)new DateTime(1970, 01, 01).AddMilliseconds(microseconds.Value / 1000).ToLocalTime() : null;
+            return microseconds.HasValue ? (DateTime?)FromUnixMicroseconds(microseconds.Value) : null;
         }
 
         #endregion
