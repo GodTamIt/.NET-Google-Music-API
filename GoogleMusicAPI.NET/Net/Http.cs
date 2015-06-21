@@ -8,10 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Net;
 using System.Net.Http;
-using System.Net.Cache;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Diagnostics;
 using System.Web;
 using System.Collections;
@@ -42,7 +39,7 @@ namespace GoogleMusic.Net
             this.Settings.UseProxy = false;
             this.Settings.MaxRequestContentBufferSize = 8000000L;
             
-            this.Client = new HttpClient(this.Settings, true);            
+            this.Client = new HttpClient(this.Settings, true);          
         }
 
         #endregion
@@ -272,6 +269,199 @@ namespace GoogleMusic.Net
         #endregion
     }
 
+    internal static class StreamOps
+    {
+
+        /// <summary>
+        /// Looks up an optimal buffer size given a content length. Attempts to balance memory usage, performance, and progress reporting reponsiveness.
+        /// </summary>
+        /// <param name="contentLength">Required. The size, in bytes, of the content being buffered.</param>
+        /// <returns>Returns a 32-bit signed integer representing a suggested buffer size.</returns>
+        static internal int GetOptimalBufferSize(long contentLength)
+        {
+            if (contentLength < 0L)
+                return 65536; // Default 60 KB
+            else if (contentLength > 33554432L)
+                return 1048576; // 1 MB when content is > 32 MB
+            else if (contentLength > 8388608L)
+                return 524288; // 0.5 MB when content is > 8 MB
+            else if (contentLength > 1048576L)
+                return 131072; // 0.1 MB when content is > 1 MB
+            else if (contentLength > 65536L)
+                return 32768; // 32 KB when content is > 64 KB
+            else
+                return (int)contentLength;
+        }
+
+        /// <summary>
+        /// Asynchronously reads the bytes from the current stream and writes them to another stream, updating the specified progress and monitoring the specified cancellation token.
+        /// </summary>
+        /// <param name="source">The stream to be copied.</param>
+        /// <param name="destination">The stream to which the contents of the current stream will be copied.</param>
+        /// <param name="totalSize">The size, in bytes, of the current stream.</param>
+        /// <param name="progress">The object to update when progress is made.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="System.Threading.CancellationToken.None"/></param>
+        /// <returns>A task that represents the asynchronous copy operation. The value of the <code>TResult</code> parameter contains a reference to the <paramref name="destination"/>.</returns>
+        public async static Task<Stream> CopyToAsync(this Stream source, Stream destination, long totalSize, IProgress<double> progress, double progressMin = 0.0, double progressMax = 100.0, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (destination == null)
+                throw new ArgumentNullException("destination");
+
+            bool canReportProgress = progress != null && totalSize > 0;
+
+            var totalDone = 0L;
+            int bufferSize = GetOptimalBufferSize(totalSize);
+
+            {
+                byte[] buffer = new byte[bufferSize];
+                int read;
+
+                while ((read = await source.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    Task writeTask = destination.WriteAsync(buffer, 0, read, cancellationToken);
+
+                    if (canReportProgress)
+                        progress.Report(Math.Min(((double)totalDone) / ((double)totalSize) * (progressMax - progressMin) + progressMin, progressMax));
+
+                    await writeTask;
+                    totalDone += read;
+                }
+            }
+
+            if (totalDone != totalSize)
+                progress.Report(progressMax);
+
+            return destination;
+        }
+        
+        /// <summary>
+        /// Asynchronously reads the bytes from the current stream and writes them to another stream, updating the specified progress and monitoring the specified cancellation token.
+        /// </summary>
+        /// <param name="source">The stream to be copied.</param>
+        /// <param name="destination">The stream to which the contents of the current stream will be copied.</param>
+        /// <param name="totalSize">The size, in bytes, of the current stream.</param>
+        /// <param name="progress">The object to update when progress is made.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="System.Threading.CancellationToken.None"/></param>
+        /// <returns>A task that represents the asynchronous copy operation. The value of the <code>TResult</code> parameter contains a reference to the <paramref name="destination"/>.</returns>
+        public async static Task<Stream> CopyToAsync(this Stream source, Stream destination, long? totalSize, IProgress<double> progress, double progressMin = 0.0, double progressMax = 100.0, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return await CopyToAsync(source, destination, (totalSize.HasValue ? totalSize.Value : -1L), progress, progressMin, progressMax, cancellationToken);
+        }
+
+        /// <summary>
+        /// Asynchronously reads the bytes from the current stream and writes them to a <code>StringBuilder</code> object, updating the specified progress and monitoring the specified cancellation token.
+        /// </summary>
+        /// <param name="source">The stream to be copied.</param>
+        /// <param name="destination">The <code>StringBuilder</code> to which the contents of the current stream will be copied.</param>
+        /// <param name="totalSize">The size, in bytes, of the current stream.</param>
+        /// <param name="progress">The object to update when progress is made.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="System.Threading.CancellationToken.None"/></param>
+        /// <returns>A task that represents the asynchronous copy operation. The value of the <code>TResult</code> parameter contains a reference to the <paramref name="destination"/>.</returns>
+        public async static Task<StringBuilder> CopyToAsync(this Stream source, StringBuilder destination, long totalSize, IProgress<double> progress, double progressMin = 0.0, double progressMax = 100.0, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (destination == null)
+                destination = new StringBuilder((int)totalSize);
+
+            bool canReportProgress = progress != null && totalSize > 0;
+
+            var totalDone = 0L;
+            int bufferSize = GetOptimalBufferSize(totalSize);
+
+            byte[] buffer = new byte[bufferSize];
+            int read;
+
+            while ((read = await source.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                destination.Append(Encoding.UTF8.GetString(buffer));
+                totalDone += read;
+
+                if (canReportProgress)
+                    progress.Report(Math.Min(((double)totalDone) / ((double)totalSize) * (progressMax - progressMin) + progressMin, progressMax));
+
+            }
+
+            if (totalDone != totalSize)
+                progress.Report(progressMax);
+
+            return destination;
+        }
+
+        /// <summary>
+        /// Asynchronously reads the bytes from the current stream and writes them to a <code>StringBuilder</code> object, updating the specified progress and monitoring the specified cancellation token.
+        /// </summary>
+        /// <param name="source">The stream to be copied.</param>
+        /// <param name="destination">The <code>StringBuilder</code> to which the contents of the current stream will be copied.</param>
+        /// <param name="totalSize">The size, in bytes, of the current stream.</param>
+        /// <param name="progress">The object to update when progress is made.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="System.Threading.CancellationToken.None"/></param>
+        /// <returns>A task that represents the asynchronous copy operation. The value of the <code>TResult</code> parameter contains a reference to the <paramref name="destination"/>.</returns>
+        public async static Task<StringBuilder> CopyToAsync(this Stream source, StringBuilder destination, long? totalSize, IProgress<double> progress, double progressMin = 0.0, double progressMax = 100.0, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return await CopyToAsync(source, destination, (totalSize.HasValue ? totalSize.Value : -1L), progress, progressMin, progressMax, cancellationToken);
+        }
+
+        /// <summary>
+        /// Asynchronously reads the bytes from the current stream and writes them to a byte array, updating the specified progress and monitoring the specified cancellation token.
+        /// </summary>
+        /// <param name="source">The stream to be copied.</param>
+        /// <param name="totalSize">The size, in bytes, of the current stream.</param>
+        /// <param name="progress">The object to update when progress is made.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="System.Threading.CancellationToken.None"/></param>
+        /// <returns>A task that represents the asynchronous copy operation. The value of the <code>TResult</code> parameter contains a reference to the <paramref name="destination"/>.</returns>
+        public async static Task<byte[]> ToArrayAsync(this Stream source, long totalSize, IProgress<double> progress, double progressMin = 0.0, double progressMax = 100.0, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            bool canReportProgress = progress != null && totalSize > 0;
+            byte[] result;
+            var totalDone = 0L;
+
+            if (totalSize > 0)
+            {
+                int bufferSize = GetOptimalBufferSize(totalSize);
+
+                result = new byte[totalSize];
+                int read;
+
+                while ((read = await source.ReadAsync(result, (int)totalDone, bufferSize, cancellationToken)) > 0)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    if (canReportProgress)
+                        progress.Report(Math.Min(((double)totalDone) / ((double)totalSize) * (progressMax - progressMin) + progressMin, progressMax));
+                    totalDone += read;
+                }
+            }
+            else
+            {
+                using (MemoryStream memoryStream = new MemoryStream())
+                {
+                    await source.CopyToAsync(memoryStream, totalSize, progress, progressMin, progressMax, cancellationToken);
+                    result = memoryStream.ToArray();
+                }
+            }
+
+            if (totalDone != totalSize)
+                progress.Report(progressMax);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Asynchronously reads the bytes from the current stream and writes them to a byte array, updating the specified progress and monitoring the specified cancellation token.
+        /// </summary>
+        /// <param name="source">The stream to be copied.</param>
+        /// <param name="totalSize">The size, in bytes, of the current stream.</param>
+        /// <param name="progress">The object to update when progress is made.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="System.Threading.CancellationToken.None"/></param>
+        /// <returns>A task that represents the asynchronous copy operation. The value of the <code>TResult</code> parameter contains a reference to the <paramref name="destination"/>.</returns>
+        public async static Task<byte[]> ToArrayAsync(this Stream source, long? totalSize, IProgress<double> progress, double progressMin = 0.0, double progressMax = 100.0, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return await ToArrayAsync(source, (totalSize.HasValue ? totalSize.Value : -1L), progress, progressMin, progressMax, cancellationToken);
+        }
+
+    }
+
 }
-
-

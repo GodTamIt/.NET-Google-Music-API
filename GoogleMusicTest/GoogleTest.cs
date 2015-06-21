@@ -7,6 +7,8 @@ using System.Text;
 using System.Windows.Forms;
 using System.Net;
 using System.Threading.Tasks;
+using System.Diagnostics;
+
 using GoogleMusic;
 
 namespace GoogleMusicTest
@@ -49,9 +51,24 @@ namespace GoogleMusicTest
             var client = new GoogleMusic.Clients.WebClient();
             var login = await client.Login(tbEmail.Text, tbPass.Text);
 
-            var playlists = await client.GetUserPlaylists();
+            Stopwatch watch = new Stopwatch();
+            //watch.Start();
+            var allsongs = await client.GetAllSongs();
+            //watch.Stop();
 
-            var load = await client.GetPlaylistContent(playlists.Value.First().Value);
+            List<Song> toDelete = new List<Song>();
+            int i = 0;
+            foreach (var pair in allsongs.Value)
+            {
+                toDelete.Add(pair.Value);
+                if (++i > 3) break;
+            }
+
+            var delete = await client.DeleteSongs(toDelete);
+
+            //var playlists = await client.GetUserPlaylists();
+
+            //var load = await client.GetPlaylistSongs(playlists.Value.First().Value);
 
             return;
         }
