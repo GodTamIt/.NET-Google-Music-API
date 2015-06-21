@@ -280,17 +280,15 @@ namespace GoogleMusic.Net
         static internal int GetOptimalBufferSize(long contentLength)
         {
             if (contentLength < 0L)
-                return 65536; // Default 60 KB
-            else if (contentLength > 33554432L)
-                return 1048576; // 1 MB when content is > 32 MB
-            else if (contentLength > 8388608L)
-                return 524288; // 0.5 MB when content is > 8 MB
-            else if (contentLength > 1048576L)
-                return 131072; // 0.1 MB when content is > 1 MB
+                return 16384; // No content length is typically smaller
+            if (contentLength > 200000L)
+                return 81920; // (Just before 85KB LOH cutoff)
+            else if (contentLength > 131072L)
+                return 65536;
             else if (contentLength > 65536L)
-                return 32768; // 32 KB when content is > 64 KB
+                return 32768;
             else
-                return (int)contentLength;
+                return (int)contentLength; // Read all in one chunk
         }
 
         /// <summary>
