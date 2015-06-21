@@ -48,7 +48,7 @@ namespace GoogleMusic
             song.TotalDiscs = track[17] == null ? 0 : track[17];
             song.Year = track[18];
             song.IsDeleted = track[19] == null ? 0 : track[19];
-            song.PermanentlyDelete = track[20];
+            song.PermanentlyDeleted = track[20];
             song.Pending = track[21];
             song.PlayCount = track[22] == null ? 0 : track[22];
             song.Rating = track[23] == null ? 0 : track[23];
@@ -66,7 +66,7 @@ namespace GoogleMusic
             if (track[34] != null) song.Bitrate = track[34]; // 34 bitrate
             song.RecentTimetampMicroseconds = track[35] == null ? 0 : track[35];  // 35 recent timestamp
             song.ArtURL = track[36];
-            song.AlbumPlaybackTimestamp = track[37];
+            song.AlbumPlaybackTimestamp = (track[37] == null ? null : track[37]);
             song.Explicit = (track[38] == null ? false : Convert.ToBoolean(track[38]));
             song.Rjb = track[39];
             song.PreviewToken = track[40];
@@ -109,7 +109,7 @@ namespace GoogleMusic
         #endregion
 
         #region Properties: Original
-        public Guid ID { get; protected set; }
+        public Guid ID { get; protected internal set; }
         public string Title { get; set; }
         public string AlbumArt { get; set; }
         public string Artist { get; set; }
@@ -117,7 +117,7 @@ namespace GoogleMusic
         public string AlbumArtist { get; set; }
         public string Composer { get; set; }
         public string Genre { get; set; }
-        public long Duration { get; protected set; }
+        public long Duration { get; protected internal set; }
         public int Track { get; set; }
         public int TotalTracks { get; set; }
         public int Disc { get; set; }
@@ -125,15 +125,15 @@ namespace GoogleMusic
         public int? Year { get; set; }
         public int PlayCount { get; set; }
         public int Rating { get; set; }
-        public long CreationTimestampMicroseconds { get; protected set; }
-        public long? LastPlayedTimestampMicroseconds { get; protected set; }
+        public long CreationTimestampMicroseconds { get; protected internal set; }
+        public long? LastPlayedTimestampMicroseconds { get; protected internal set; }
         public string StoreID { get; set; }
         public string MatchedID { get; set; }
         public int Type { get; set; }
         public string Comment { get; set; }
         public string FixMatchNeeded { get; set; }
         public string MatchedAlbumId { get; set; }
-        public string MatchedArtistId { get; protected set; }
+        public string MatchedArtistId { get; protected internal set; }
         public int? Bitrate { get; protected set; }
         public string ArtURL { get; set; }
         public string SubjectToCuration { get; set; }
@@ -143,7 +143,7 @@ namespace GoogleMusic
         public string AlbumArtistNorm { get; set; }
         public string fhb { get; set; }
         public bool IsDeleted { get; set; }
-        public bool? PermanentlyDelete { get; set; }
+        public bool? PermanentlyDeleted { get; set; }
         public string Pending { get; set; }
         public long RecentTimetampMicroseconds { get; set; }
         public long? AlbumPlaybackTimestamp { get; set; } // last updated?
@@ -236,7 +236,7 @@ namespace GoogleMusic
                 //TotalDiscs = GetComparison(x.TotalDiscs, y.TotalDiscs),
                 Year = GetYearComparison(x.Year, y.Year),
                 IsDeleted = GetComparison(x.IsDeleted, y.IsDeleted),
-                PermanentlyDelete = GetComparison(x.PermanentlyDelete, y.PermanentlyDelete), //20
+                PermanentlyDelete = GetComparison(x.PermanentlyDeleted, y.PermanentlyDeleted), //20
                 Pending = GetComparison(x.Pending, y.Pending),
                 //Playcount = GetComparison(x.Playcount, y.Playcount),
                 //Rating = GetComparison(x.Rating, y.Rating),
@@ -276,7 +276,7 @@ namespace GoogleMusic
             if (diff.Disc != null) this.Disc = diff.Disc.Value;
             if (diff.Year != null) this.Year = diff.Year;
             if (diff.IsDeleted != null) this.IsDeleted = diff.IsDeleted.Value;
-            if (diff.PermanentlyDelete != null) this.PermanentlyDelete = diff.PermanentlyDelete;
+            if (diff.PermanentlyDelete != null) this.PermanentlyDeleted = diff.PermanentlyDelete;
             if (diff.Pending != null) this.Pending = diff.Pending;
             if (diff.SubjectToCuration != null) this.SubjectToCuration = diff.SubjectToCuration;
             if (diff.MatchedID != null) this.MatchedID = diff.MatchedID;
