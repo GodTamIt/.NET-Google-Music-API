@@ -745,6 +745,7 @@ namespace GoogleMusicAPI
                     int attempts = 0;
                     while (shouldRetry && attempts < 10)
                     {
+                        
                         String jsonString = "{" + 
                             "\"clientId\": \"Jumper Uploader\"," +
                             "\"createSessionRequest\": {" +
@@ -752,7 +753,7 @@ namespace GoogleMusicAPI
                                     "{" +
                                         "\"external\": {" +
                                             "\"filename\":\"" + fileInfo.Name + "\"," +
-                                            "\"name\":\"" + fileInfo.DirectoryName + "\"," +
+                                            "\"name\":\"" + fileInfo.FullName.Replace("\\", "\\\\") + "\"," +
                                             "\"put\": {}" +
                                         "}" +
                                     "}," +

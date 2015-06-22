@@ -211,7 +211,7 @@ namespace GoogleMusicAPI
             request.Method = "GET";
 
             if (uploaderId != null)
-                request.Headers["X-Device-ID"] = uploaderId;
+                request.Headers["X-Device-ID"] = (uploaderId.StartsWith("chromeapp:", StringComparison.OrdinalIgnoreCase) ? String.Empty : "chromeapp:") + uploaderId;
 
             if (userAgent != null)
                 request.UserAgent = userAgent;
