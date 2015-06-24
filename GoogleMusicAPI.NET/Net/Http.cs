@@ -137,7 +137,7 @@ namespace GoogleMusic.Net
         {
             CookieCollection collection = GetCollection(container, url);
             if (collection != null)
-                return collection.OfType<Cookie>().FirstOrDefault(p => p.Name == cookieName).Value;
+                return collection.OfType<Cookie>().First(p => p.Name == cookieName).Value;
 
             return null;
         }
