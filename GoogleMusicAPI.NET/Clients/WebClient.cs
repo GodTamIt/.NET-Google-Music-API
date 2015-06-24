@@ -162,7 +162,7 @@ namespace GoogleMusic.Clients
         /// <summary>
         /// Asynchronously retrieves the number of songs in the current Google Music library.
         /// </summary>
-        /// <returns>Returns a</returns>
+        /// <returns>A task that represents the asynchronous request. The value of the <code>TResult</code> parameter contains a <code>Result</code> object with the number of songs.</returns>
         public async Task<Result<int>> GetSongCount()
         {
             if (!this.IsLoggedIn)
@@ -190,11 +190,13 @@ namespace GoogleMusic.Clients
         /// </summary>
         /// <param name="results">Optional. The collection to add the songs to. The recommended data structure in nearly all cases is <see cref="System.Collections.Generic.Dictionary"/>.</param>
         /// <param name="lockResults">Optional. The object to lock when making writes to <paramref name="results"/>. This is useful when <paramref name="results"/> is not thread-safe.</param>
-        /// <returns>Returns a Task containing a <see cref="Result"/> object with the resulting collection of songs if successful.</returns>
+        /// <param name="progress">Optional. The object to report progress to.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="System.Threading.CancellationToken.None"/></param>
+        /// <returns>A task that represents the asynchronous request. The value of the <code>TResult</code> parameter contains a <code>Result</code> object with the resulting collection of songs, if successful.</returns>
         public async Task<Result<IDictionary<Guid, Song>>> GetAllSongs(IDictionary<Guid, Song> results = null, object lockResults = null, IProgress<double> progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (!this.IsLoggedIn)
-                return new Result<IDictionary<Guid, Song>>(false, results, this);
+                return new Result<IDictionary<Guid, Song>>(false, results, this, new ClientNotAuthorizedException(this));
             
             // Step 1: Get response from Google
             var response = await GetAllSongs_Request(progress, cancellationToken);
@@ -310,6 +312,8 @@ namespace GoogleMusic.Clients
         /// </summary>
         /// <param name="results">Optional. The collection to add the songs to. The recommended data structure in nearly all cases is <see cref="System.Collections.Generic.Dictionary"/>.</param>
         /// <param name="lockResults">Optional. The object to lock when making writes to <paramref name="results"/>. This is useful when <paramref name="results"/> is not thread-safe.</param>
+        /// <param name="progress">Optional. The object to report progress to.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="System.Threading.CancellationToken.None"/></param>
         /// <returns></returns>
         public async Task<Result<IDictionary<Guid, Song>>> GetDeletedSongs(IDictionary<Guid, Song> results = null, object lockResults = null, IProgress<double> progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -464,9 +468,18 @@ namespace GoogleMusic.Clients
 
         #region CreatePlaylist
 
+        /// <summary>
+        /// Asynchronously creates a playlist with the given specifics.
+        /// </summary>
+        /// <param name="title">Required. The name of the playlist.</param>
+        /// <param name="description">Optional. A description of the contents of the playlist.</param>
+        /// <param name="songs">Optional. The songs to initially add to the playlist.</param>
+        /// <returns>A task that represents the asynchronous request. The value of the <code>TResult</code> parameter contains a <code>Result</code> object with the new playlist, if successful.</returns>
         public async Task<Result<Playlist>> CreatePlaylist(string title, string description = null, IEnumerable<Song> songs = null)
         {
-            if (String.IsNullOrEmpty(title))
+            if (!this.IsLoggedIn)
+                return new Result<Playlist>(false, null, this, new ClientNotAuthorizedException(this));
+            else if (String.IsNullOrEmpty(title))
                 return new Result<Playlist>(false, null, this, new ArgumentException("Argument cannot be null or empty.", "name"));
 
             // Step 1: Send request to server
@@ -608,6 +621,8 @@ namespace GoogleMusic.Clients
         /// </summary>
         /// <param name="results">Optional. The collection to add the playlists to. The recommended data structure in nearly all cases is <see cref="System.Collections.Generic.Dictionary"/>.</param>
         /// <param name="lockResults">Optional. The object to lock when making writes to <paramref name="results"/>. This is useful when <paramref name="results"/> is not thread-safe.</param>
+        /// <param name="progress">Optional. The object to report progress to.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="System.Threading.CancellationToken.None"/></param>
         /// <returns>A task that represents the asynchronous request. The value of the <code>TResult</code> parameter contains a <code>Result</code> object with the outcome of the request.</returns>
         public async Task<Result<IDictionary<Guid, Playlist>>> GetUserPlaylists(IDictionary<Guid, Playlist> results = null, object lockResults = null, IProgress<double> progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -683,6 +698,13 @@ namespace GoogleMusic.Clients
 
         #region GetPlaylistContent
 
+        /// <summary>
+        /// Asynchronously gets the contents (songs) of the specified playlist.
+        /// </summary>
+        /// <param name="playlist">Required. The playlist to retrieve songs for.</param>
+        /// <param name="progress">Optional. The object to report progress to.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="System.Threading.CancellationToken.None"/></param>
+        /// <returns>A task that represents the asynchronous request. The value of the <code>TResult</code> parameter contains a <code>Result</code> object with the list of songs (which are also set in the playlist).</returns>
         public async Task<Result<List<Song>>> GetPlaylistSongs(Playlist playlist, IProgress<double> progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (!this.IsLoggedIn)
