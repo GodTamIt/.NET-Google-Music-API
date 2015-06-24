@@ -25,10 +25,9 @@ namespace GoogleMusic.Clients
 
         #region Members
         // Constants
-        private static readonly Regex AUTH_REGEX = new Regex(@"Auth=(?<AUTH>(.*?))$", RegexOptions.IgnoreCase);
-        private static readonly Regex AUTH_ERROR_REGEX = new Regex(@"Error=(?<ERROR>(.*?))$", RegexOptions.IgnoreCase);
         private static readonly Regex AUTH_USER_ID_REGEX = new Regex(@"window\['USER_ID'\] = '(?<USERID>(.*?))'", RegexOptions.IgnoreCase);
         private static readonly Regex GET_ALL_SONGS_REGEX = new Regex(@"window\.parent\['slat_process'\]\((?<SONGS>.+?)\);\s+?window", RegexOptions.Singleline);
+        private static readonly Random RANDOM = new Random();
 
         private Http_Old http_old;
         private Http http;
@@ -47,11 +46,9 @@ namespace GoogleMusic.Clients
 
         #region Properties
 
-        public string AuthorizationToken { get; protected set; }
-
         public bool IsLoggedIn
         {
-            get { return !String.IsNullOrEmpty(this.AuthorizationToken) && !String.IsNullOrEmpty(this.SessionId); }
+            get { return !String.IsNullOrEmpty(this.UserId) && !String.IsNullOrEmpty(this.SessionId); }
         }
 
         public string SessionId { get; set; }
@@ -74,48 +71,44 @@ namespace GoogleMusic.Clients
         /// </returns>
         public async Task<Result<string>> Login(string email, string password, CancellationToken cancellationToken = default(CancellationToken))
         {
-            // Step 1: Get authorization token
+            // Step 1: Get GALX cookie
+            string galx;
+            try
+            {
+                await http.Client.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://accounts.google.com/ServiceLogin"), cancellationToken);
+                galx = http.Settings.CookieContainer.GetCookie("https://accounts.google.com", "GALX");
+            }
+            catch (Exception e) { return new Result<string>(false, "Failed to start the authorization process. Google may have changed the protocol.", this, e); }
+
+            if (galx == null)
+                return new Result<string>(false, "Failed to start the authorization process. Google may have changed the protocol.", this);
+
+            // Step 2: Get authorization token and authorization cookie (thanks to 'continue' in form data)
             var form = new[]
                     {
+
+                        new KeyValuePair<string, string>("GALX", galx),
+                        new KeyValuePair<string, string>("continue", "https://play.google.com/music/listen"),
+                        new KeyValuePair<string, string>("_utf8", "☃"),
                         new KeyValuePair<string, string>("service", "sj"),
+                        new KeyValuePair<string, string>("bgresponse", "js_disabled"),
+                        new KeyValuePair<string, string>("pstMsg", "1"),
+                        new KeyValuePair<string, string>("dnConn", String.Empty),
+                        new KeyValuePair<string, string>("checkConnection", String.Format("youtube:{0}:1", RANDOM.Next(100, 1000))),
+                        new KeyValuePair<string, string>("checkDomains", "youtube"),
                         new KeyValuePair<string, string>("Email", email),
-                        new KeyValuePair<string, string>("Passwd", password)
+                        new KeyValuePair<string, string>("Passwd", password),
+                        new KeyValuePair<string, string>("signIn", "Sign in"),
+                        new KeyValuePair<string, string>("PersistentCookie", "yes"),
+                        new KeyValuePair<string, string>("rmShown", "1")
                     };
             try
             {
                 string response;
                 using (var formContent = new FormUrlEncodedContent(form))
                 {
-                    response = await (await http.Client.PostAsync("https://www.google.com/accounts/ClientLogin", formContent, cancellationToken)).Content.ReadAsStringAsync();
+                    response = await (await http.Client.PostAsync("https://accounts.google.com/ServiceLoginAuth", formContent, cancellationToken)).Content.ReadAsStringAsync();
                 }
-
-                if (cancellationToken.IsCancellationRequested)
-                    return null;
-
-                Match regex = AUTH_REGEX.Match(response);
-                
-                if (regex.Success)
-                {
-                    AuthorizationToken = regex.Groups["AUTH"].Value;
-                    http.Client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", "GoogleLogin auth=" + AuthorizationToken);
-                }
-                else
-                {
-                    this.Logout();
-                    regex = AUTH_ERROR_REGEX.Match(response);
-                    if (regex.Success)
-                        return new Result<string>(false, "Google returned the following error while trying to retrieve an authorization token:\r\n\r\n" + regex.Groups["ERROR"].Value, this);
-                    else
-                        return new Result<string>(false, "An unknown error occurred.", this);
-                }
-            }
-            catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
-
-
-            // Step 2: Get authorization cookie
-            try
-            {
-                string response = await http.Client.GetStringAsync("https://play.google.com/music/listen?u=0");
 
                 this.UserId = AUTH_USER_ID_REGEX.Match(response).Groups["USERID"].Value;
 
@@ -123,6 +116,10 @@ namespace GoogleMusic.Clients
                     return new Result<string>(false, "Unable to retrieve the proper authorization cookies from Google.", this);
             }
             catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
+
+
+            if (cancellationToken.IsCancellationRequested)
+                return new Result<string>(false, "Request cancelled.", this);
 
 
             // Step 3: Generate session ID
@@ -151,7 +148,7 @@ namespace GoogleMusic.Clients
             http.Settings.CookieContainer.ClearCookies("https://www.google.com/");
             http.Settings.CookieContainer.ClearCookies("https://www.music.google.com/");
             http.Client.DefaultRequestHeaders.Remove("Authorization");
-            this.AuthorizationToken = null;
+            this.UserId = null;
             this.SessionId = null;
         }
 
@@ -809,7 +806,7 @@ namespace GoogleMusic.Clients
                         if (song != null)
                             addResult.Invoke(song);
                     }
-                    catch (Exception) { }
+                    catch { }
 
                     if (progress != null)
                         progress.Report((progressMax - progressMin) * ((double)(i + 1) / (double)trackArray.Count) + progressMin);
