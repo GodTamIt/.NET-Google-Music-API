@@ -32,6 +32,7 @@ namespace GoogleMusicAPI
 
         #region Members
         public static string Version;
+        private static readonly Random RANDOM = new Random();
 
         public String DeviceId;
         public String DeviceFriendlyName;
@@ -130,6 +131,16 @@ namespace GoogleMusicAPI
             OAuth2HTTP.AccessToken = json["access_token"];
         }
 
+        public string GetGALX()
+        {
+            var cookies = client.DownloadCookiesSync(new Uri("https://accounts.google.com/ServiceLogin"));
+
+            GoogleHTTP.AuthorizationCookieCont = cookies.Item1;
+            GoogleHTTP.AuthorizationCookies = cookies.Item2;
+
+            return GoogleHTTP.GetCookieValue("GALX", cookies.Item2);
+        }
+
         public void Login(String email, String password, String refreshToken, String clientId, String clientSecret)
         {
             ClientId = clientId;
@@ -138,43 +149,41 @@ namespace GoogleMusicAPI
 
             RefreshAccessToken();
 
-            
+
+            string galx = GetGALX();            
             Dictionary<String, String> fields = new Dictionary<String, String>
             {
+                {"GALX", galx},
+                {"continue", "https://play.google.com/music/listen"},
+                {"_utf8", "☃"},
                 {"service", "sj"},
+                {"bgresponse", "js_disabled"},
+                {"pstMsg", "1"},
+                {"dnConn", String.Empty},
+                {"checkConnection", String.Format("youtube:{0}:1", RANDOM.Next(100, 1000))},
                 {"Email",  email},
                 {"Passwd", password},
+                {"signIn", "Sign in"},
+                {"PersistentCookie", "yes"},
+                {"rmShown", "1"}
             };
 
             FormBuilder builder = new FormBuilder();
             builder.AddFields(fields);
             builder.Close();
 
-            string jsonData = Encoding.UTF8.GetString(client.UploadDataSync(new Uri("https://www.google.com/accounts/ClientLogin"), builder.ContentType, builder.GetBytes()));
-
-            string CountTemplate = @"Auth=(?<AUTH>(.*?))$";
-            Regex CountRegex = new Regex(CountTemplate, RegexOptions.IgnoreCase);
-            string auth = CountRegex.Match(jsonData).Groups["AUTH"].ToString();
-
-            GoogleHTTP.AuthroizationToken = auth;
-
-            GetAuthCookies();
+            GetAuthCookies(builder);
         }
 
-        public void Login(String authToken)
-        {
-            GoogleHTTP.AuthroizationToken = authToken;
-            GetAuthCookies();
-        }
-
-        private void GetAuthCookies()
+        private void GetAuthCookies(FormBuilder builder)
         {
             HttpWebRequest request;
             HttpWebResponse response;
 
-            client.UploadDataSync(new Uri("https://play.google.com/music/listen?hl=en&u=0"), FormBuilder.Empty.ContentType, FormBuilder.Empty.GetBytes(), out request, out response);
+            client.UploadDataSync(new Uri("https://accounts.google.com/ServiceLoginAuth"), builder.ContentType, builder.GetBytes(), out request, out response);
 
-            GoogleHTTP.SetCookieData(request.CookieContainer, response.Cookies);
+            GoogleHTTP.AuthorizationCookies = response.Cookies;
+            response.Close();
         }
         #endregion
 

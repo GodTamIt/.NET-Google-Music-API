@@ -9,7 +9,6 @@ namespace GoogleMusicAPI
 {
     public class GoogleHTTP : HTTP
     {
-        public static String AuthroizationToken = null;
         public static CookieContainer AuthorizationCookieCont = new CookieContainer();
         public static CookieCollection AuthorizationCookies = new CookieCollection();
 
@@ -20,24 +19,22 @@ namespace GoogleMusicAPI
 
         public override HttpWebRequest SetupRequest(Uri address, String userAgent = null)
         {
-            if (address.ToString().StartsWith("https://play.google.com/music/services/"))
+            string xt = GoogleHTTP.GetCookieValue("xt", AuthorizationCookies); 
+            if (xt != null)
             {
-                address = new Uri(address.OriginalString + String.Format("?u=0&xt={0}", GoogleHTTP.GetCookieValue("xt")));
+                address = new Uri(address.OriginalString + String.Format("?u=0&xt={0}", xt));
             }
 
             HttpWebRequest request = base.SetupRequest(address);
 
             request.CookieContainer = AuthorizationCookieCont;
-            
-            if (AuthroizationToken != null)
-                request.Headers[HttpRequestHeader.Authorization] = String.Format("GoogleLogin auth={0}", AuthroizationToken);
 
             return request;
         }
 
-        public static String GetCookieValue(String cookieName)
+        public static String GetCookieValue(String cookieName, CookieCollection cookieCollection)
         {
-            foreach (Cookie cookie in AuthorizationCookies)
+            foreach (Cookie cookie in cookieCollection)
             {
                 if (cookie.Name.Equals(cookieName))
                     return cookie.Value;

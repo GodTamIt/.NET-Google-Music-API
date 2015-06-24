@@ -241,6 +241,20 @@ namespace GoogleMusicAPI
             return Encoding.UTF8.GetString(result);
         }
 
+        public Tuple<CookieContainer, CookieCollection> DownloadCookiesSync(Uri address)
+        {
+            HttpWebRequest request = SetupRequest(address);
+            request.Method = "GET";
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+
+            CookieCollection result = response.Cookies;
+
+            response.Close();
+
+            return new Tuple<CookieContainer,CookieCollection>(request.CookieContainer, response.Cookies);
+        }
+
         public HttpWebRequest DownloadStringAsync(Uri address, RequestCompletedEventHandler completedCallback, int millisecondsTimeout = 10000)
         {
             HttpWebRequest request = SetupRequest(address);
@@ -269,7 +283,6 @@ namespace GoogleMusicAPI
 
             HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(address);
             request.Pipelined = false;
-            request.AllowAutoRedirect = false;
 
 #if !NETFX_CORE
             request.ServicePoint.MaxIdleTime = 1000 * 60;
