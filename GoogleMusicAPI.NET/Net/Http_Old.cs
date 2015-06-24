@@ -117,7 +117,7 @@ namespace GoogleMusic.Net
                     Cookie.Expired = true;
                 }
             }
-            catch (Exception)
+            catch 
             {
             }
         }
@@ -155,7 +155,7 @@ namespace GoogleMusic.Net
             {
                 return this.Cookies.GetCookieHeader(new Uri(URL));
             }
-            catch (Exception)
+            catch 
             {
                 return string.Empty;
             }
@@ -173,7 +173,7 @@ namespace GoogleMusic.Net
             {
                 return this.Cookies.GetCookies(new Uri(URL));
             }
-            catch (Exception)
+            catch 
             {
                 return null;
             }
@@ -191,7 +191,7 @@ namespace GoogleMusic.Net
             {
                 this.Cookies.Add(new Uri(URL), Cookie);
             }
-            catch (Exception)
+            catch 
             {
             }
         }
@@ -211,7 +211,7 @@ namespace GoogleMusic.Net
                     this.Cookies.Add(new Uri(URL), c);
                 }
             }
-            catch (Exception)
+            catch 
             {
             }
         }
@@ -228,7 +228,7 @@ namespace GoogleMusic.Net
             {
                 this.Cookies.Add(new Uri(URL), CCollection);
             }
-            catch (Exception)
+            catch 
             {
             }
         }
@@ -261,7 +261,7 @@ namespace GoogleMusic.Net
             {
                 return CloneCookies(new Uri(OldDomain), new Uri(NewDomain));
             }
-            catch (Exception)
+            catch 
             {
                 return false;
             }
@@ -285,7 +285,7 @@ namespace GoogleMusic.Net
                 }
                 return true;
             }
-            catch (Exception)
+            catch 
             {
                 return false;
             }

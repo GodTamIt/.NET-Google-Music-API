@@ -146,7 +146,7 @@ namespace GoogleMusic.Net
                         buffer = memoryStream.GetBuffer();
                         bufferValid = buffer != null;
                     }
-                    catch (Exception) { }
+                    catch { }
 
                     if (bufferValid)
                     {

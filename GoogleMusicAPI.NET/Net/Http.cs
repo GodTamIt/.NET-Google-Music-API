@@ -101,7 +101,7 @@ namespace GoogleMusic.Net
                 foreach (Cookie Cookie in filtered)
                     Cookie.Expired = true;
             }
-            catch (Exception) { }
+            catch { }
         }
 
 
@@ -154,7 +154,7 @@ namespace GoogleMusic.Net
             {
                 return container.GetCookieHeader(new Uri(url));
             }
-            catch (Exception)
+            catch 
             {
                 return string.Empty;
             }
@@ -170,7 +170,7 @@ namespace GoogleMusic.Net
         public static CookieCollection GetCollection(this CookieContainer container, string url)
         {
             try { return container.GetCookies(new Uri(url)); }
-            catch (Exception) { return null; }
+            catch { return null; }
         }
 
 
@@ -186,9 +186,7 @@ namespace GoogleMusic.Net
             {
                 container.Add(new Uri(url), cookie);
             }
-            catch (Exception)
-            {
-            }
+            catch { }
         }
 
 
@@ -201,7 +199,7 @@ namespace GoogleMusic.Net
         public static void Add(this CookieContainer container, string url, Cookie[] cookieArray)
         {
             try { foreach (Cookie c in cookieArray) container.Add(new Uri(url), c); }
-            catch (Exception) { }
+            catch { }
         }
 
 
@@ -214,7 +212,7 @@ namespace GoogleMusic.Net
         public static void Add(this CookieContainer container, string url, CookieCollection cookieCollection)
         {
             try { container.Add(new Uri(url), cookieCollection); }
-            catch (Exception) { }
+            catch { }
         }
 
 
@@ -244,7 +242,7 @@ namespace GoogleMusic.Net
         public static bool CloneCookies(this CookieContainer container, string oldDomain, string newDomain)
         {
             try { return CloneCookies(container, new Uri(oldDomain), new Uri(newDomain)); }
-            catch (Exception) { return false; }
+            catch { return false; }
         }
 
 
@@ -263,7 +261,7 @@ namespace GoogleMusic.Net
                     container.SetCookies(newDomain, Cook.Name + "=" + Cook.Value + ((Cook.Expires != null) ? "; expires=" + Cook.Expires.ToString() : "") + (!(Cook.Path == string.Empty) ? "; path=" + Cook.Path : "" + "; domain=") + newDomain.Host + (Cook.HttpOnly ? "; HttpOnly" : ""));
                 return true;
             }
-            catch (Exception) { return false; }
+            catch { return false; }
         }
 
         #endregion
