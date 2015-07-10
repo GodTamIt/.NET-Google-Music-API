@@ -28,7 +28,7 @@ namespace GoogleMusic
     /// </summary>
     public delegate void TaskCompleteEventHandler();
 
-    public class Result<T>
+    public class Result<T> : Result
     {
 
         #region Constructor
@@ -39,14 +39,33 @@ namespace GoogleMusic
         /// <param name="result">Required. The value returned by the operation.</param>
         /// <param name="client">Required. The parent client of the operation executed.</param>
         /// <param name="innerException">Optional. The underlying exception thrown by the program on a failure. Value is null on success but maybe also be null on failure.</param>
-        internal Result(bool success, T result, Clients.IClient client, Exception innerException = null)
+        internal Result(bool success, T result, Clients.IClient client, Exception innerException = null) : base(success, client, innerException)
         {
-            this.Success = success;
             this.Value = result;
-            this.Client = client;
-            this.InnerException = innerException;
         }
+
         #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the value returned by the operation.
+        /// </summary>
+        public T Value { get; protected set; }
+
+        #endregion
+    }
+
+
+    public class Result
+    {
+        /// <summary>
+        /// Initializes a new instance of Result that represents the outcome of an operation.
+        /// </summary>
+        /// <param name="success">Required. The boolean value representing the operation's success.</param>
+        /// <param name="client">Required. The parent client of the operation executed.</param>
+        /// <param name="innerException">Optional. The underlying exception thrown by the program on a failure. Value is null on success but maybe also be null on failure.</param>
+        internal Result(bool success, Clients.IClient client, Exception innerException = null) { }
 
         #region Properties
 
@@ -54,11 +73,6 @@ namespace GoogleMusic
         /// Gets the boolean value representing the operation's success.
         /// </summary>
         public bool Success { get; protected set; }
-
-        /// <summary>
-        /// Gets the value returned by the operation.
-        /// </summary>
-        public T Value { get; protected set; }
 
         /// <summary>
         /// The parent client of the operation executed.
@@ -71,19 +85,5 @@ namespace GoogleMusic
         public Exception InnerException { get; protected set; }
 
         #endregion
-    }
-
-
-    public class Result : Result<object>
-    {
-        /// <summary>
-        /// Initializes a new instance of Result that represents the outcome of an operation.
-        /// </summary>
-        /// <param name="success">Required. The boolean value representing the operation's success.</param>
-        /// <param name="result">Required. The value returned by the operation.</param>
-        /// <param name="client">Required. The parent client of the operation executed.</param>
-        /// <param name="innerException">Optional. The underlying exception thrown by the program on a failure. Value is null on success but maybe also be null on failure.</param>
-        internal Result(bool success, object result, Clients.IClient client, Exception innerException = null) : base(success, result, client, innerException) { }
-
     }
 }
