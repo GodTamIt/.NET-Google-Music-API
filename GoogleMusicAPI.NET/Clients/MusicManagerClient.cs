@@ -5,6 +5,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
+using System.IO;
+
+using System.Net.Http;
+using System.Net.Http.Headers;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -18,12 +22,13 @@ namespace GoogleMusic.Clients
 
         #region Members
         private const string USER_AGENT = "Music Manager (1, 0, 55, 7425 HTTPS - Windows)";
+        private const string ANDROID_URL = "https://android.clients.google.com/upsj/";
+        private const string SJ_URL = "https://www.googleapis.com/sj/v1.1/";
+        private const string PROTO_CONTENT_TYPE = "application/x-google-protobuf";
+        private const Random RANDOM = new Random();
 
-        private string _clientId;
-        private string _clientSecret;
-        private string _accessToken;
-
-        private Http_Old http;
+        private Http_Old http_old;
+        private Http http;
         #endregion
 
         #region Constructor
@@ -36,8 +41,10 @@ namespace GoogleMusic.Clients
         /// <exception cref="System.ArgumentException">Thrown when clientId is an empty string or null.</exception>
         public MusicManagerClient(string clientId, string clientSecret)
         {
-            http = new Http_Old();
+            http_old = new Http_Old();
+            http = new Http();
             http.UserAgent = USER_AGENT;
+            http_old.UserAgent = USER_AGENT;
 
             // Assign property to get error handling
             ClientId = clientId;
@@ -50,40 +57,20 @@ namespace GoogleMusic.Clients
 
         public bool IsLoggedIn
         {
-            get { return !(String.IsNullOrEmpty(_accessToken) || String.IsNullOrEmpty(this.RefreshToken) || String.IsNullOrEmpty(this.AuthorizationCode)); }
+            get { return !(String.IsNullOrEmpty(this.AccessToken) || String.IsNullOrEmpty(this.RefreshToken) || String.IsNullOrEmpty(this.AuthorizationCode)); }
         }
 
         /// <summary>
         /// The emulated ID of the program accessing the MusicManager API.
         /// </summary>
         /// <exception cref="System.ArgumentException">Thrown when property is set to empty string or null.</exception>
-        public string ClientId
-        {
-            get { return _clientId; }
-            set
-            {
-                if (String.IsNullOrEmpty(value))
-                    throw new ArgumentException("ClientId cannot be null or empty.", "value");
-
-                _clientId = value;
-            }
-        }
+        public string ClientId { get; set; }
 
         /// <summary>
         /// The secret string of the program given by Google.
         /// </summary>
         /// <exception cref="System.ArgumentException">Thrown when property is set to empty string or null.</exception>
-        public string ClientSecret
-        {
-            get { return _clientSecret; }
-            set
-            {
-                if (String.IsNullOrEmpty(value))
-                    throw new ArgumentException("ClientSecret cannot be null or empty.", "value");
-
-                _clientSecret = value;
-            }
-        }
+        public string ClientSecret { get; set; }
 
         /// <summary>
         /// Read-only. The authorization code retrieved by the user to authorize access from the MusicManagerClient.
@@ -110,46 +97,10 @@ namespace GoogleMusic.Clients
         /// <returns>Returns the URL calculated.</returns>
         public string GetAuthorizationCodeUrl()
         {
-            string encodedClientId = System.Web.HttpUtility.UrlEncode(_clientId, Encoding.GetEncoding("ISO-8859-1"));
-            string encodedScope = System.Web.HttpUtility.UrlEncode("https://www.googleapis.com/auth/musicmanager", Encoding.GetEncoding("ISO-8859-1"));
+            Encoding encoding = Encoding.GetEncoding("ISO-8859-1");
 
             return String.Format("https://accounts.google.com/o/oauth2/auth?response_type=code&client_id={0}&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope={1}",
-                encodedClientId, encodedScope);
-        }
-
-        /// <summary>
-        /// Attempts to retrieve the refresh token from Google given the user's authorization code.
-        /// </summary>
-        /// <param name="authorizationCode">Required. The authorization code retrieved by the user to authorize access from the MusicManagerClient.</param>
-        /// <returns>Returns the result from Google's servers.</returns>
-        public Result<string> GetRefreshToken(string authorizationCode)
-        {
-            this.AuthorizationCode = authorizationCode;
-
-            try
-            {
-                HttpWebResponse response;
-                using (FormBuilder form = new FormBuilder())
-                {
-                    form.AddField("code", authorizationCode);
-                    form.AddField("client_id", ClientId);
-                    form.AddField("client_secret", ClientSecret);
-                    form.AddField("redirect_uri", "urn:ietf:wg:oauth:2.0:oob");
-                    form.AddField("grant_type", "authorization_code");
-                    form.AddEnding();
-
-                    HttpWebRequest request = SetupWebRequest("https://accounts.google.com/o/oauth2/token", Http_Old.POST);
-                    response = http.Request(request, form);
-                }
-
-                // Bytes -> String -> JSON
-                Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(response.ToUTF8());
-
-                this.RefreshToken = json["refresh_token"];
-                return new Result<string>(true, this.RefreshToken, this);
-            }
-            catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
-            
+                System.Web.HttpUtility.UrlEncode(this.ClientId, encoding), System.Web.HttpUtility.UrlEncode("https://www.googleapis.com/auth/musicmanager", encoding));
         }
 
         /// <summary>
@@ -157,122 +108,88 @@ namespace GoogleMusic.Clients
         /// </summary>
         /// <param name="authorizationCode">Required. The authorization code retrieved by the user to authorize access from the MusicManagerClient.</param>
         /// <param name="cancellationToken">Optional. The token to monitor for cancellation requests.</param>
-        /// <returns>Returns a task the result from Google's servers.</returns>
-        public async Task<Result<string>> GetRefreshTokenAsync(string authorizationCode, CancellationToken cancellationToken = default(CancellationToken))
+        /// <returns>Returns the result from Google's servers.</returns>
+        public async Task<Result<string>> GetRefreshToken(string authorizationCode, CancellationToken cancellationToken = default(CancellationToken))
         {
             this.AuthorizationCode = authorizationCode;
+            string response = null;
 
             try
             {
-                HttpWebResponse response;
-                using (FormBuilder form = new FormBuilder())
+                using (var content = new MultipartFormDataContent("----------" + DateTime.Now.Ticks.ToString("x")))
                 {
-                    form.AddField("code", authorizationCode);
-                    form.AddField("client_id", ClientId);
-                    form.AddField("client_secret", ClientSecret);
-                    form.AddField("redirect_uri", "urn:ietf:wg:oauth:2.0:oob");
-                    form.AddField("grant_type", "authorization_code");
-                    form.AddEnding();
+                    content.Add(new StringContent(this.AuthorizationCode), "code");
+                    content.Add(new StringContent(this.ClientId), "client_id");
+                    content.Add(new StringContent(this.ClientSecret), "client_secret");
+                    content.Add(new StringContent("urn:ietf:wg:oauth:2.0:oob"), "redirect_uri");
+                    content.Add(new StringContent("grant_type"), "authorization_code");
 
-                    response = await http.RequestAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token", Http_Old.POST), form, cancellationToken);
+                    response = await (await http.Client.PostAsync("https://accounts.google.com/o/oauth2/token", content, cancellationToken)).Content.ReadAsStringAsync();
                 }
 
-                if (cancellationToken.IsCancellationRequested)
-                    return null;
-
-                // Bytes -> String -> JSON
-                Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(await response.ToUTF8Async(cancellationToken: cancellationToken));
-
-                if (cancellationToken.IsCancellationRequested)
-                    return null;
+                Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(response);
 
                 this.RefreshToken = json["refresh_token"];
-                return new Result<string>(true, this.RefreshToken, this);
             }
-            catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
-        }
+            catch (Exception e) { return new Result<string>(false, response, this, e); }
 
-        /// <summary>
-        /// Renews the access token with the refresh token.
-        /// </summary>
-        /// <returns>Returns the new access token.</returns>
-        public Result<string> RenewAccessToken()
-        {
-            if (String.IsNullOrEmpty(RefreshToken))
-                return new Result<string>(false, String.Empty, this);
-
-            try
-            {
-                HttpWebResponse response;
-                using (FormBuilder form = new FormBuilder())
-                {
-                    form.AddField("refresh_token", RefreshToken);
-                    form.AddField("client_id", ClientId);
-                    form.AddField("client_secret", ClientSecret);
-                    form.AddField("grant_type", "refresh_token");
-                    form.AddEnding();
-
-                    response = http.Request(SetupWebRequest("https://accounts.google.com/o/oauth2/token", Http_Old.POST), form);
-                }
-
-                // Bytes -> String -> JSON
-                Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(response.ToUTF8());
-
-                _accessToken = json["access_token"];
-                return new Result<string>(true, _accessToken, this);
-            }
-            catch (WebException e)
-            {
-                return new Result<string>(false, String.Empty, this, e);
-            }
-            catch (JsonException e)
-            {
-                return new Result<string>(false, String.Empty, this, e);
-            }
-            catch (Exception e)
-            {
-                return new Result<string>(false, String.Empty, this, e);
-            }
+            return new Result<string>(true, this.RefreshToken, this);
         }
 
         /// <summary>
         /// Asynchronously renews the access token with the refresh token.
         /// </summary>
-        /// <param name="cancellationToken">Optional. The token to monitor for cancellation requests.</param>
         /// <returns>Returns the new access token.</returns>
-        public async Task<Result<string>> RenewAccessTokenAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Result<string>> GetAccessToken(string refreshToken = null, CancellationToken cancellationToken = default(CancellationToken))
         {
+            if (refreshToken != null)
+                this.RefreshToken = refreshToken;
+
             if (String.IsNullOrEmpty(RefreshToken))
                 return new Result<string>(false, String.Empty, this);
 
+            string response = null;
+
             try
             {
-                HttpWebResponse response;
-                using (FormBuilder form = new FormBuilder())
+                using (var content = new MultipartFormDataContent("----------" + DateTime.Now.Ticks.ToString("x")))
                 {
-                    form.AddField("refresh_token", RefreshToken);
-                    form.AddField("client_id", ClientId);
-                    form.AddField("client_secret", ClientSecret);
-                    form.AddField("grant_type", "refresh_token");
-                    form.AddEnding();
+                    content.Add(new StringContent(this.RefreshToken), "refresh_token");
+                    content.Add(new StringContent(this.ClientId), "client_id");
+                    content.Add(new StringContent(this.ClientSecret), "client_secret");
+                    content.Add(new StringContent("refresh_token"), "grant_type");
 
-                    response = await http.RequestAsync(SetupWebRequest("https://accounts.google.com/o/oauth2/token", Http_Old.POST), form, cancellationToken);
+                    response = await (await http.Client.PostAsync("https://accounts.google.com/o/oauth2/token", content, cancellationToken)).Content.ReadAsStringAsync();
                 }
 
-                if (cancellationToken.IsCancellationRequested)
-                    return null;
-
                 // Bytes -> String -> JSON
-                Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(await response.ToUTF8Async(cancellationToken: cancellationToken));
+                Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(response);
 
-                if (cancellationToken.IsCancellationRequested)
-                    return null;
-
-                _accessToken = json["access_token"];
-                return new Result<string>(true, _accessToken, this);
+                this.AccessToken = json["access_token"];
             }
             catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
+
+            return new Result<string>(true, this.AccessToken, this);
         }
+
+        /// <summary>
+        /// Asynchronously authorizes the client. Internally calls <code>GetRefreshToken</code> and <code>GetAccessToken</code>.
+        /// </summary>
+        /// <param name="authorizationCode">Required. The authorization code retrieved by the user to authorize access from the MusicManagerClient.</param>
+        /// <param name="cancellationToken">Optional. The token to monitor for cancellation requests.</param>
+        /// <returns></returns>
+        public async Task<Result> Login(string authorizationCode, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var refreshTask = await GetRefreshToken(authorizationCode, cancellationToken);
+            if (!refreshTask.Success)
+                return new Result(refreshTask.Success, this, refreshTask.InnerException);
+
+            var accessTask = await GetAccessToken(cancellationToken: cancellationToken);
+
+            return new Result(accessTask.Success, this, accessTask.InnerException);
+        }
+
+
 
         /// <summary>
         /// Deauthorizes the client from accessing an account.
@@ -281,21 +198,16 @@ namespace GoogleMusic.Clients
         {
             this.AuthorizationCode = String.Empty;
             this.RefreshToken = String.Empty;
-            _accessToken = String.Empty;
+            this.AccessToken = String.Empty;
         }
 
         #endregion
 
-        #region Web
+        #region Uploading
 
-        private HttpWebRequest SetupWebRequest(string address, string method = Http_Old.GET)
+        public async Task<Result<string>> AuthorizeUploader(string uploaderId, string uploaderReadableName)
         {
-            HttpWebRequest request = http.CreateRequest(address, method);
-
-            if (_accessToken != null)
-                request.Headers[HttpRequestHeader.Authorization] = "Bearer " + _accessToken;
             
-            return request;
         }
 
         #endregion

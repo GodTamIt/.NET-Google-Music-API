@@ -222,7 +222,7 @@ namespace GoogleMusic.Clients
             catch (Exception e) { return new Result<string>(false, String.Empty, this, e); }
         }
 
-        private Result<bool> GetAllSongs_Parse(string response, ref IDictionary<Guid, Song> results, object lockResults, IProgress<double> progress, double progressMin = 80.0, double progressMax = 100.0)
+        private Result GetAllSongs_Parse(string response, ref IDictionary<Guid, Song> results, object lockResults, IProgress<double> progress, double progressMin = 80.0, double progressMax = 100.0)
         {
             var matches = GET_ALL_SONGS_REGEX.Matches(response);
             
@@ -234,7 +234,7 @@ namespace GoogleMusic.Clients
                 lockResults = null;
             }
 
-            Result<bool> parseResult = new Result<bool>(true, true, this);
+            Result parseResult = new Result(true, this);
 
             if (matches.Count > 5)
             {
@@ -329,7 +329,7 @@ namespace GoogleMusic.Clients
                 return new Result<IDictionary<Guid, Song>>(requestResult.Success, results, this, requestResult.InnerException);
 
             // Step 2: Parse streamed JSArray
-            Result<bool> parseResult;
+            Result parseResult;
             using (requestResult.Value)
                 parseResult = await Task.Run(() => ParseSongs(1, requestResult.Value, (song) => results.Add(song.ID, song), lockResults, progress, 25.0, 100.0), cancellationToken);
 
@@ -634,7 +634,7 @@ namespace GoogleMusic.Clients
                 return new Result<IDictionary<Guid, Playlist>>(requestResult.Success, results, this, requestResult.InnerException);
 
             // Step 2: Parse streamed JSON
-            Result<bool> parseResult;
+            Result parseResult;
             using (requestResult.Value)
                 parseResult = await Task.Run(() => GetUserPlaylists_Parse(requestResult.Value, results, lockResults, progress), cancellationToken);
 
@@ -657,7 +657,7 @@ namespace GoogleMusic.Clients
             catch (Exception e) { return new Result<Stream>(false, null, this, e); }
         }
 
-        private Result<bool> GetUserPlaylists_Parse(Stream jsonStream, IDictionary<Guid, Playlist> results, object lockResults, IProgress<double> progress, double progressMin = 25.0, double progressMax = 100.0)
+        private Result GetUserPlaylists_Parse(Stream jsonStream, IDictionary<Guid, Playlist> results, object lockResults, IProgress<double> progress, double progressMin = 25.0, double progressMax = 100.0)
         {
             try
             {
@@ -686,9 +686,9 @@ namespace GoogleMusic.Clients
                 }
                 finally { if (lockWasTaken) Monitor.Exit(lockResults); }
 
-                return new Result<bool>(true, true, this);
+                return new Result(true, true, this);
             }
-            catch (Exception e) { return new Result<bool>(false, false, this, e); }
+            catch (Exception e) { return new Result(false, false, this, e); }
         }
 
         #endregion
@@ -719,7 +719,7 @@ namespace GoogleMusic.Clients
                 playlist.Songs = new List<Song>();
 
             // Step 3: Parse results from data
-            Result<bool> parseResult;
+            Result parseResult;
             using (requestResult.Value)
                 parseResult = await Task.Run(() => ParseSongs(1, requestResult.Value, (song) => playlist.Songs.Add(song), null, progress, 80.0, 100.0), cancellationToken);
 
@@ -747,12 +747,12 @@ namespace GoogleMusic.Clients
 
         #region Parsing
 
-        private static Result<bool> ParseSongs(int arrayIndex, string javascriptData, Action<Song> addResult, object lockResults, IProgress<double> progress = null, double progressMin = 0.0, double progressMax = 100.0)
+        private static Result ParseSongs(int arrayIndex, string javascriptData, Action<Song> addResult, object lockResults, IProgress<double> progress = null, double progressMin = 0.0, double progressMax = 100.0)
         {
             return ParseSongs(arrayIndex, () => { return JsonConvert.DeserializeObject(javascriptData); }, addResult, lockResults, progress, progressMin, progressMax);
         }
 
-        private static Result<bool> ParseSongs(int arrayIndex, Stream javascriptStream, Action<Song> addResult, object lockResults, IProgress<double> progress = null, double progressMin = 0.0, double progressMax = 100.0)
+        private static Result ParseSongs(int arrayIndex, Stream javascriptStream, Action<Song> addResult, object lockResults, IProgress<double> progress = null, double progressMin = 0.0, double progressMax = 100.0)
         {
             return ParseSongs(arrayIndex, () =>
                 {
@@ -766,7 +766,7 @@ namespace GoogleMusic.Clients
                     addResult, lockResults, progress, progressMin, progressMax);
         }
 
-        private static Result<bool> ParseSongs(int arrayIndex, Func<dynamic> dynamicFunc, Action<Song> addResult, object lockResults, IProgress<double> progress, double progressMin, double progressMax)
+        private static Result ParseSongs(int arrayIndex, Func<dynamic> dynamicFunc, Action<Song> addResult, object lockResults, IProgress<double> progress, double progressMin, double progressMax)
         {
             JArray trackArray;
             try
@@ -782,7 +782,7 @@ namespace GoogleMusic.Clients
                     trackArray = (JArray)trackArray[0];
 
             }
-            catch (Exception e) { return new Result<bool>(false, false, null, e); }
+            catch (Exception e) { return new Result(false, false, null, e); }
 
             if (progress != null)
             {
@@ -814,7 +814,7 @@ namespace GoogleMusic.Clients
             }
             finally { if (lockWasTaken) Monitor.Exit(lockResults); }
 
-            return new Result<bool>(true, true, null);
+            return new Result(true, true, null);
         }
 
         #endregion

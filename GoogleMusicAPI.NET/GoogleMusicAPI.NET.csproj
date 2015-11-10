@@ -70,8 +70,8 @@
     <Compile Include="Models\Song.cs" />
     <Compile Include="Net\FormBuilder.cs" />
     <Compile Include="Net\Http.cs" />
+    <Compile Include="Progress.cs" />
     <Compile Include="Result.cs" />
-    <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="Clients\WebClient.cs" />
     <Compile Include="Net\Http_Old.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

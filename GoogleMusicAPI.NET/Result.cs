@@ -18,15 +18,6 @@ using System.Threading.Tasks;
 
 namespace GoogleMusic
 {
-    /// <summary>
-    /// The delegate type invoked when an asynchronous GoogleMusic function makes progress.
-    /// </summary>
-    /// <param name="progress">The new percentage progress to report, in the range 0.0 to 1.0.</param>
-    public delegate void TaskProgressEventHandler(double progress);
-    /// <summary>
-    /// The delegate type invoked when an asynchronous GoogleMusic function finishes a task.
-    /// </summary>
-    public delegate void TaskCompleteEventHandler();
 
     public class Result<T> : Result
     {
