@@ -29,8 +29,8 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Library", 0, 2);
-            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Playlists", 1, 3);
+            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Library", 0, 2);
+            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("Playlists", 1, 3);
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GoogleTest));
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
@@ -218,6 +218,7 @@
             // txtAuth
             // 
             this.txtAuth.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtAuth.Enabled = false;
             this.txtAuth.Location = new System.Drawing.Point(148, 66);
             this.txtAuth.Name = "txtAuth";
             this.txtAuth.Size = new System.Drawing.Size(176, 22);
@@ -275,17 +276,17 @@
             this.tvSidebar.ImageList = this.imageList1;
             this.tvSidebar.Location = new System.Drawing.Point(0, 0);
             this.tvSidebar.Name = "tvSidebar";
-            treeNode1.ImageIndex = 0;
-            treeNode1.Name = "tvnLibrary";
-            treeNode1.SelectedImageIndex = 2;
-            treeNode1.Text = "Library";
-            treeNode2.ImageIndex = 1;
-            treeNode2.Name = "tvnPlaylists";
-            treeNode2.SelectedImageIndex = 3;
-            treeNode2.Text = "Playlists";
+            treeNode3.ImageIndex = 0;
+            treeNode3.Name = "tvnLibrary";
+            treeNode3.SelectedImageIndex = 2;
+            treeNode3.Text = "Library";
+            treeNode4.ImageIndex = 1;
+            treeNode4.Name = "tvnPlaylists";
+            treeNode4.SelectedImageIndex = 3;
+            treeNode4.Text = "Playlists";
             this.tvSidebar.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode1,
-            treeNode2});
+            treeNode3,
+            treeNode4});
             this.tvSidebar.SelectedImageIndex = 0;
             this.tvSidebar.ShowRootLines = false;
             this.tvSidebar.Size = new System.Drawing.Size(190, 450);
