@@ -44,7 +44,6 @@ namespace GoogleMusicTest
             playlists_table = new DataTable();
             playlists_table.Columns.Add("Title", Type.GetType("System.String"));
             playlists_table.Columns.Add("Description", Type.GetType("System.String"));
-            playlists_table.Columns.Add("Owner", Type.GetType("System.String"));
             playlists_table.Columns.Add("ID", Type.GetType("System.Guid"));
             playlists_table.Columns.Add("Last Modified", Type.GetType("System.DateTime"));
             playlists_table.Columns.Add("Created", Type.GetType("System.DateTime"));
@@ -313,7 +312,7 @@ namespace GoogleMusicTest
             foreach (Playlist p in playlists_dict.Values)
             {
                 // Add row in playlists table
-                playlists_table.Rows.Add(p.Title, p.Description, p.OwnerName, p.ID, p.LastModifiedTimestamp, p.CreationTimestamp);
+                playlists_table.Rows.Add(p.Title, p.Description, p.ID, p.LastModifiedTimestamp, p.CreationTimestamp);
 
                 // Add songs to the playlist's song table
                 DataTable songs = CreateSongsDataTable();
@@ -340,6 +339,46 @@ namespace GoogleMusicTest
             }
         }
 
+        private async Task CreatePlaylist(string title, string description)
+        {
+            var result = await client.CreatePlaylist(title, description);
+            if (!result.Success)
+            {
+                MessageBox.Show("Failed to add new playlist!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            }
+
+            Playlist p = result.Value;
+
+            playlists_dict.Add(p.ID, p);
+
+            // Add row in playlists table
+            playlists_table.Rows.Add(p.Title, p.Description, p.ID, p.LastModifiedTimestamp, p.CreationTimestamp);
+
+            // Add songs to the playlist's song table
+            DataTable songs = CreateSongsDataTable();
+            foreach (Song s in p.Songs)
+                songs.Rows.Add(s.Title, s.Artist, s.Album, s.Genre, s.Year, s.ID, s.PlaylistEntryId);
+
+            playlists_data.Add(songs);
+
+            // Add to TreeView
+            if (tvSidebar.InvokeRequired)
+                tvSidebar.Invoke(new MethodInvoker(() =>
+                {
+                    TreeNode node = tvSidebar.Nodes[1].Nodes.Add(p.Title, p.Title, 1, 3);
+                    node.Tag = p.ID;
+                }));
+            else
+            {
+                TreeNode node = tvSidebar.Nodes[1].Nodes.Add(p.Title, p.Title, 1, 3);
+                node.Tag = p.ID;
+            }
+
+            // Add to btnAddTo
+            btnAddTo_AddEntry(p);
+        }
+
         private async Task<bool> DeletePlaylist(Guid playlistID)
         {
             Playlist playlist;
@@ -363,9 +402,15 @@ namespace GoogleMusicTest
 
             playlists_dict.Remove(playlistID);
 
+            var dataSource = dgvData.DataSource;
+            dgvData.DataSource = null;
+            dgvData.Refresh();
+
             tvSidebar.Nodes[1].Nodes.Clear();
             btnAddTo.DropDownItems.Clear();
-            UpdatePlaylists();
+            await Task.Run(() => UpdatePlaylists());
+
+            dgvData.DataSource = dataSource;
 
             tvSidebar.SelectedNode = tvSidebar.Nodes[1];
 
@@ -480,10 +525,16 @@ namespace GoogleMusicTest
                 }
             }
 
+            var dataSource = dgvData.DataSource;
+            dgvData.DataSource = null;
+            dgvData.Refresh();
+
             tvSidebar.Nodes[1].Nodes.Clear();
             btnAddTo.DropDownItems.Clear();
-            UpdateSongs();
-            UpdatePlaylists();
+            await Task.Run(() => UpdateSongs());
+            await Task.Run(() => UpdatePlaylists());
+
+            dgvData.DataSource = dataSource;
 
             return true;
         }
@@ -543,13 +594,12 @@ namespace GoogleMusicTest
             else
             {
                 success = await DeleteFromPlaylist((Guid)tvSidebar.SelectedNode.Tag, ids);
-            }
-
-            if (success && delete)
-            {
-                foreach (var row in rows)
+                if (success && delete)
                 {
-                    dgvData.Rows.Remove(row);
+                    foreach (var row in rows)
+                    {
+                        dgvData.Rows.Remove(row);
+                    }
                 }
             }
 
@@ -557,6 +607,15 @@ namespace GoogleMusicTest
         }
 
         #endregion
+
+        private async void btnAdd_Click(object sender, EventArgs e)
+        {
+            AddPlaylistForm frmAddPlaylist = new AddPlaylistForm();
+            if (frmAddPlaylist.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                return;
+
+            await CreatePlaylist(frmAddPlaylist.Title, frmAddPlaylist.Description);
+        }
 
 
 

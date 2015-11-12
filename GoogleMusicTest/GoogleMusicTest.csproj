@@ -78,6 +78,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddPlaylistForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AddPlaylistForm.Designer.cs">
+      <DependentUpon>AddPlaylistForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="GoogleTest.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -86,6 +92,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="AddPlaylistForm.resx">
+      <DependentUpon>AddPlaylistForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="GoogleTest.resx">
       <DependentUpon>GoogleTest.cs</DependentUpon>
     </EmbeddedResource>
@@ -118,6 +127,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Playlist.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Google Music.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
