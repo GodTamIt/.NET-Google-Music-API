@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 namespace GoogleMusic
 {
     
-    public class Playlist
+    public class Playlist : ICloneable
     {
 
         #region Properties: Info
@@ -95,5 +95,10 @@ namespace GoogleMusic
         }
 
         #endregion
+
+        public object Clone()
+        {
+            return this.MemberwiseClone();
+        }
     }
 }
