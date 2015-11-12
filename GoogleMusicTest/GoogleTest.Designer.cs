@@ -39,7 +39,7 @@
             this.toolStripStatusLabel3 = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblCount = new System.Windows.Forms.ToolStripStatusLabel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.splitContainer3 = new System.Windows.Forms.SplitContainer();
+            this.spltTop = new System.Windows.Forms.SplitContainer();
             this.label4 = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -51,32 +51,37 @@
             this.label3 = new System.Windows.Forms.Label();
             this.spltMain = new System.Windows.Forms.SplitContainer();
             this.tvSidebar = new System.Windows.Forms.TreeView();
-            this.cntxtSidebar = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.btnAddPlaylist = new System.Windows.Forms.ToolStripMenuItem();
-            this.btnDeletePlaylist = new System.Windows.Forms.ToolStripMenuItem();
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.dgvData = new System.Windows.Forms.DataGridView();
-            this.cntxtSongs = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.btnAdd = new System.Windows.Forms.ToolStripButton();
+            this.btnRemove = new System.Windows.Forms.ToolStripButton();
+            this.btnUpload = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.btnAddTo = new System.Windows.Forms.ToolStripDropDownButton();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.btnRefresh = new System.Windows.Forms.ToolStripButton();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).BeginInit();
-            this.splitContainer3.Panel1.SuspendLayout();
-            this.splitContainer3.Panel2.SuspendLayout();
-            this.splitContainer3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.spltTop)).BeginInit();
+            this.spltTop.Panel1.SuspendLayout();
+            this.spltTop.Panel2.SuspendLayout();
+            this.spltTop.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.spltMain)).BeginInit();
             this.spltMain.Panel1.SuspendLayout();
             this.spltMain.Panel2.SuspendLayout();
             this.spltMain.SuspendLayout();
-            this.cntxtSidebar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvData)).BeginInit();
+            this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // statusStrip1
             // 
+            this.statusStrip1.BackColor = System.Drawing.Color.Transparent;
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1,
             this.lblStatus,
@@ -139,7 +144,7 @@
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.splitContainer3);
+            this.splitContainer1.Panel1.Controls.Add(this.spltTop);
             // 
             // splitContainer1.Panel2
             // 
@@ -148,32 +153,32 @@
             this.splitContainer1.SplitterDistance = 98;
             this.splitContainer1.TabIndex = 1;
             // 
-            // splitContainer3
+            // spltTop
             // 
-            this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer3.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-            this.splitContainer3.IsSplitterFixed = true;
-            this.splitContainer3.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer3.Name = "splitContainer3";
+            this.spltTop.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.spltTop.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+            this.spltTop.IsSplitterFixed = true;
+            this.spltTop.Location = new System.Drawing.Point(0, 0);
+            this.spltTop.Name = "spltTop";
             // 
-            // splitContainer3.Panel1
+            // spltTop.Panel1
             // 
-            this.splitContainer3.Panel1.Controls.Add(this.label4);
-            this.splitContainer3.Panel1.Controls.Add(this.pictureBox1);
-            this.splitContainer3.Panel1MinSize = 367;
+            this.spltTop.Panel1.Controls.Add(this.label4);
+            this.spltTop.Panel1.Controls.Add(this.pictureBox1);
+            this.spltTop.Panel1MinSize = 367;
             // 
-            // splitContainer3.Panel2
+            // spltTop.Panel2
             // 
-            this.splitContainer3.Panel2.Controls.Add(this.label1);
-            this.splitContainer3.Panel2.Controls.Add(this.txtAccount);
-            this.splitContainer3.Panel2.Controls.Add(this.btnLogin);
-            this.splitContainer3.Panel2.Controls.Add(this.label2);
-            this.splitContainer3.Panel2.Controls.Add(this.txtAuth);
-            this.splitContainer3.Panel2.Controls.Add(this.txtPass);
-            this.splitContainer3.Panel2.Controls.Add(this.label3);
-            this.splitContainer3.Size = new System.Drawing.Size(902, 98);
-            this.splitContainer3.SplitterDistance = 367;
-            this.splitContainer3.TabIndex = 9;
+            this.spltTop.Panel2.Controls.Add(this.label1);
+            this.spltTop.Panel2.Controls.Add(this.txtAccount);
+            this.spltTop.Panel2.Controls.Add(this.btnLogin);
+            this.spltTop.Panel2.Controls.Add(this.label2);
+            this.spltTop.Panel2.Controls.Add(this.txtAuth);
+            this.spltTop.Panel2.Controls.Add(this.txtPass);
+            this.spltTop.Panel2.Controls.Add(this.label3);
+            this.spltTop.Size = new System.Drawing.Size(902, 98);
+            this.spltTop.SplitterDistance = 367;
+            this.spltTop.TabIndex = 9;
             // 
             // label4
             // 
@@ -284,14 +289,15 @@
             // spltMain.Panel2
             // 
             this.spltMain.Panel2.Controls.Add(this.dgvData);
+            this.spltMain.Panel2.Controls.Add(this.toolStrip1);
             this.spltMain.Size = new System.Drawing.Size(902, 450);
             this.spltMain.SplitterDistance = 190;
             this.spltMain.TabIndex = 0;
             // 
             // tvSidebar
             // 
+            this.tvSidebar.AllowDrop = true;
             this.tvSidebar.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.tvSidebar.ContextMenuStrip = this.cntxtSidebar;
             this.tvSidebar.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tvSidebar.HideSelection = false;
             this.tvSidebar.ImageIndex = 0;
@@ -314,30 +320,9 @@
             this.tvSidebar.Size = new System.Drawing.Size(190, 450);
             this.tvSidebar.TabIndex = 0;
             this.tvSidebar.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.tvSidebar_AfterSelect);
-            // 
-            // cntxtSidebar
-            // 
-            this.cntxtSidebar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnAddPlaylist,
-            this.btnDeletePlaylist});
-            this.cntxtSidebar.Name = "contextMenuStrip1";
-            this.cntxtSidebar.Size = new System.Drawing.Size(203, 64);
-            // 
-            // btnAddPlaylist
-            // 
-            this.btnAddPlaylist.Image = ((System.Drawing.Image)(resources.GetObject("btnAddPlaylist.Image")));
-            this.btnAddPlaylist.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
-            this.btnAddPlaylist.Name = "btnAddPlaylist";
-            this.btnAddPlaylist.Size = new System.Drawing.Size(202, 30);
-            this.btnAddPlaylist.Text = "Add Playlist";
-            // 
-            // btnDeletePlaylist
-            // 
-            this.btnDeletePlaylist.Image = ((System.Drawing.Image)(resources.GetObject("btnDeletePlaylist.Image")));
-            this.btnDeletePlaylist.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
-            this.btnDeletePlaylist.Name = "btnDeletePlaylist";
-            this.btnDeletePlaylist.Size = new System.Drawing.Size(202, 30);
-            this.btnDeletePlaylist.Text = "Delete Selected Playlist";
+            this.tvSidebar.DragDrop += new System.Windows.Forms.DragEventHandler(this.tvSidebar_DragDrop);
+            this.tvSidebar.DragOver += new System.Windows.Forms.DragEventHandler(this.tvSidebar_DragOver);
+            this.tvSidebar.DragLeave += new System.EventHandler(this.tvSidebar_DragLeave);
             // 
             // imageList1
             // 
@@ -356,18 +341,93 @@
             this.dgvData.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvData.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvData.Location = new System.Drawing.Point(0, 0);
+            this.dgvData.Location = new System.Drawing.Point(0, 31);
             this.dgvData.Name = "dgvData";
             this.dgvData.ReadOnly = true;
             this.dgvData.RowHeadersVisible = false;
             this.dgvData.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvData.Size = new System.Drawing.Size(708, 450);
+            this.dgvData.Size = new System.Drawing.Size(708, 419);
             this.dgvData.TabIndex = 0;
+            this.dgvData.UserDeletingRow += new System.Windows.Forms.DataGridViewRowCancelEventHandler(this.dgvData_UserDeletingRow);
+            this.dgvData.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dgvData_MouseDown);
+            this.dgvData.MouseMove += new System.Windows.Forms.MouseEventHandler(this.dgvData_MouseMove);
             // 
-            // cntxtSongs
+            // toolStrip1
             // 
-            this.cntxtSongs.Name = "cntxtSongs";
-            this.cntxtSongs.Size = new System.Drawing.Size(61, 4);
+            this.toolStrip1.BackColor = System.Drawing.Color.Transparent;
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnAdd,
+            this.btnRemove,
+            this.btnUpload,
+            this.toolStripSeparator1,
+            this.btnAddTo,
+            this.toolStripSeparator2,
+            this.btnRefresh});
+            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
+            this.toolStrip1.Size = new System.Drawing.Size(708, 31);
+            this.toolStrip1.TabIndex = 2;
+            this.toolStrip1.Text = "toolStrip1";
+            // 
+            // btnAdd
+            // 
+            this.btnAdd.Enabled = false;
+            this.btnAdd.Image = ((System.Drawing.Image)(resources.GetObject("btnAdd.Image")));
+            this.btnAdd.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.btnAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnAdd.Name = "btnAdd";
+            this.btnAdd.Size = new System.Drawing.Size(57, 28);
+            this.btnAdd.Text = "Add";
+            // 
+            // btnRemove
+            // 
+            this.btnRemove.Image = ((System.Drawing.Image)(resources.GetObject("btnRemove.Image")));
+            this.btnRemove.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.btnRemove.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnRemove.Name = "btnRemove";
+            this.btnRemove.Size = new System.Drawing.Size(78, 28);
+            this.btnRemove.Text = "Remove";
+            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
+            // 
+            // btnUpload
+            // 
+            this.btnUpload.Image = ((System.Drawing.Image)(resources.GetObject("btnUpload.Image")));
+            this.btnUpload.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.btnUpload.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnUpload.Name = "btnUpload";
+            this.btnUpload.Size = new System.Drawing.Size(73, 28);
+            this.btnUpload.Text = "Upload";
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 31);
+            // 
+            // btnAddTo
+            // 
+            this.btnAddTo.Image = ((System.Drawing.Image)(resources.GetObject("btnAddTo.Image")));
+            this.btnAddTo.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.btnAddTo.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnAddTo.Name = "btnAddTo";
+            this.btnAddTo.Size = new System.Drawing.Size(89, 28);
+            this.btnAddTo.Text = "Add to...";
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 31);
+            // 
+            // btnRefresh
+            // 
+            this.btnRefresh.Image = ((System.Drawing.Image)(resources.GetObject("btnRefresh.Image")));
+            this.btnRefresh.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.btnRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnRefresh.Name = "btnRefresh";
+            this.btnRefresh.Size = new System.Drawing.Size(74, 28);
+            this.btnRefresh.Text = "Refresh";
+            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
             // GoogleTest
             // 
@@ -378,6 +438,7 @@
             this.ClientSize = new System.Drawing.Size(902, 581);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.statusStrip1);
+            this.DoubleBuffered = true;
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(875, 39);
@@ -389,19 +450,21 @@
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
-            this.splitContainer3.Panel1.ResumeLayout(false);
-            this.splitContainer3.Panel1.PerformLayout();
-            this.splitContainer3.Panel2.ResumeLayout(false);
-            this.splitContainer3.Panel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).EndInit();
-            this.splitContainer3.ResumeLayout(false);
+            this.spltTop.Panel1.ResumeLayout(false);
+            this.spltTop.Panel1.PerformLayout();
+            this.spltTop.Panel2.ResumeLayout(false);
+            this.spltTop.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.spltTop)).EndInit();
+            this.spltTop.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.spltMain.Panel1.ResumeLayout(false);
             this.spltMain.Panel2.ResumeLayout(false);
+            this.spltMain.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.spltMain)).EndInit();
             this.spltMain.ResumeLayout(false);
-            this.cntxtSidebar.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvData)).EndInit();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -418,7 +481,7 @@
         private System.Windows.Forms.ImageList imageList1;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.SplitContainer splitContainer3;
+        private System.Windows.Forms.SplitContainer spltTop;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox txtAccount;
         private System.Windows.Forms.Button btnLogin;
@@ -427,13 +490,17 @@
         private System.Windows.Forms.TextBox txtPass;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.DataGridView dgvData;
-        private System.Windows.Forms.ContextMenuStrip cntxtSidebar;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel2;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel3;
         private System.Windows.Forms.ToolStripStatusLabel lblCount;
-        private System.Windows.Forms.ToolStripMenuItem btnAddPlaylist;
-        private System.Windows.Forms.ToolStripMenuItem btnDeletePlaylist;
-        private System.Windows.Forms.ContextMenuStrip cntxtSongs;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripButton btnAdd;
+        private System.Windows.Forms.ToolStripButton btnUpload;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripButton btnRefresh;
+        private System.Windows.Forms.ToolStripButton btnRemove;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripDropDownButton btnAddTo;
 
 
     }
