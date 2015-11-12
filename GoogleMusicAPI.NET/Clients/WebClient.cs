@@ -546,7 +546,7 @@ namespace GoogleMusic.Clients
 
                 playlist.SharedToken = deserialized[1][1].ToObject<string>();
                 int songCount = songs == null ? -1 : songs.Count();
-                if (songs.Count() > 0)
+                if (songCount > 0)
                 {
                     // Initialize new list for songs
                     playlist.Songs = new List<Song>(songCount);
@@ -611,8 +611,7 @@ namespace GoogleMusic.Clients
                 return new Result<Guid>(requestResult.Success, new Guid(), this, requestResult.InnerException);
 
             // Step 2: Parse result from server and create playlist
-            using (requestResult.Value)
-                return await Task.Run(() => DeletePlaylist_ParseResponse(requestResult.Value));
+            return await Task.Run(() => DeletePlaylist_ParseResponse(requestResult.Value));
         }
 
         private string DeletePlaylist_BuildJson(Playlist playlist)
@@ -626,35 +625,29 @@ namespace GoogleMusic.Clients
             return "json="+ JsonConvert.SerializeObject(build);
         }
 
-        private async Task<Result<Stream>> DeletePlaylist_Request(Playlist playlist)
+        private async Task<Result<String>> DeletePlaylist_Request(Playlist playlist)
         {
             string url = AppendXt("https://play.google.com/music/services/deleteplaylist");
-            Stream response;
+            String response;
             try
             {
                 using (var stringContent = new StringContent(DeletePlaylist_BuildJson(playlist), Encoding.UTF8, "application/x-www-form-urlencoded"))
                 {
-                    response = await (await http.Client.PostAsync(url, stringContent)).Content.ReadAsStreamAsync();
+                    response = await (await http.Client.PostAsync(url, stringContent)).Content.ReadAsStringAsync();
                 }
             }
-            catch (Exception e) { return new Result<Stream>(false, null, this, e); }
+            catch (Exception e) { return new Result<String>(false, null, this, e); }
 
-            return new Result<Stream>(true, response, this);
+            return new Result<String>(true, response, this);
         }
 
-        private Result<Guid> DeletePlaylist_ParseResponse(Stream response)
+        private Result<Guid> DeletePlaylist_ParseResponse(String response)
         {
             try
             {
-                JArray deserialized;
-                using (StreamReader streamReader = new StreamReader(response))
-                using (var jsonTextReader = new JsonTextReader(streamReader))
-                {
-                    var jsonSerializer = new JsonSerializer();
-                    deserialized = jsonSerializer.Deserialize<JArray>(jsonTextReader);
-                }
+                Dictionary<string, string> deserialized = JsonConvert.DeserializeObject<Dictionary<string, string>>(response);
 
-                return new Result<Guid>(true, deserialized["deleteId"].ToObject<Guid>(), this);
+                return new Result<Guid>(true, Guid.Parse(deserialized["deleteId"]), this);
             }
             catch (Exception e) { return new Result<Guid>(false, new Guid(), this, e); }
         }
