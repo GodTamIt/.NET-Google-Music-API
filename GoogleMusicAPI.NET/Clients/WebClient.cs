@@ -378,7 +378,7 @@ namespace GoogleMusic.Clients
                 return new Result<IEnumerable<Guid>>(requestResult.Success, null, this, requestResult.InnerException);
             
             // Step 2: Parse response of successfully deleted songs
-            return await Task.Run(() => DeleteSongs_ParseResponse(requestResult.Value, songs.Count()));
+            return await Task.Run(() => ParseDeleteResponse(requestResult.Value, songs.Count()));
         }
 
         private void DeleteSongs_BuildJson(IEnumerable<Song> songs, Stream stream)
@@ -441,24 +441,6 @@ namespace GoogleMusic.Clients
             catch (Exception e) { return new Result<Stream>(false, null, this, e); }
 
             return new Result<Stream>(true, response, this);
-        }
-
-        private Result<IEnumerable<Guid>> DeleteSongs_ParseResponse(Stream response, int originalCount)
-        {
-            try
-            {
-                dynamic deserialized;
-                using (StreamReader streamReader = new StreamReader(response))
-                using (var jsonTextReader = new JsonTextReader(streamReader))
-                {
-                    var jsonSerializer = new JsonSerializer();
-                    deserialized = jsonSerializer.Deserialize(jsonTextReader);
-                }
-
-                Guid[] deleted = deserialized["deleteIds"].ToObject<Guid[]>();
-                return new Result<IEnumerable<Guid>>(deleted.Length == originalCount, deleted, this);
-            }
-            catch (Exception e) { return new Result<IEnumerable<Guid>>(false, new Guid[0], this, e); }
         }
 
         #endregion
@@ -564,7 +546,7 @@ namespace GoogleMusic.Clients
 
                 playlist.SharedToken = deserialized[1][1].ToObject<string>();
                 int songCount = songs == null ? -1 : songs.Count();
-                if (songs.Count() > 0)
+                if (songCount > 0)
                 {
                     // Initialize new list for songs
                     playlist.Songs = new List<Song>(songCount);
@@ -607,6 +589,67 @@ namespace GoogleMusic.Clients
                 return new Result<Playlist>(true, playlist, this);
             }
             catch (Exception e) { return new Result<Playlist>(false, null, this, e); }
+        }
+
+        #endregion
+
+        #region DeletePlaylist
+
+        /// <summary>
+        /// Asynchronously deletes a playlist.
+        /// </summary>
+        /// <param name="title">Required. The playlist to delete.</param>
+        /// <returns>A task that represents the asynchronous request. The value of the <code>TResult</code> parameter contains a <code>Result</code> object with the deleted playlist ID, if successful.</returns>
+        public async Task<Result<Guid>> DeletePlaylist(Playlist playlist)
+        {
+            if (!this.IsLoggedIn)
+                return new Result<Guid>(false, new Guid(), this, new ClientNotAuthorizedException(this));
+
+            // Step 1: Send request to server
+            var requestResult = await DeletePlaylist_Request(playlist);
+            if (!requestResult.Success)
+                return new Result<Guid>(requestResult.Success, new Guid(), this, requestResult.InnerException);
+
+            // Step 2: Parse result from server and create playlist
+            return await Task.Run(() => DeletePlaylist_ParseResponse(requestResult.Value));
+        }
+
+        private string DeletePlaylist_BuildJson(Playlist playlist)
+        {
+            var build = new Dictionary<string, object>(4);
+            build.Add("id", playlist.ID);
+            build.Add("requestCause", 1);
+            build.Add("requestType", 1);
+            build.Add("sessionId", this.SessionId);
+
+            return "json="+ JsonConvert.SerializeObject(build);
+        }
+
+        private async Task<Result<String>> DeletePlaylist_Request(Playlist playlist)
+        {
+            string url = AppendXt("https://play.google.com/music/services/deleteplaylist");
+            String response;
+            try
+            {
+                using (var stringContent = new StringContent(DeletePlaylist_BuildJson(playlist), Encoding.UTF8, "application/x-www-form-urlencoded"))
+                {
+                    response = await (await http.Client.PostAsync(url, stringContent)).Content.ReadAsStringAsync();
+                }
+            }
+            catch (Exception e) { return new Result<String>(false, null, this, e); }
+
+            return new Result<String>(true, response, this);
+        }
+
+        private Result<Guid> DeletePlaylist_ParseResponse(String response)
+        {
+            try
+            {
+                Dictionary<string, string> deserialized = JsonConvert.DeserializeObject<Dictionary<string, string>>(response);
+
+                return new Result<Guid>(true, Guid.Parse(deserialized["deleteId"]), this);
+            }
+            catch (Exception e) { return new Result<Guid>(false, new Guid(), this, e); }
         }
 
         #endregion
@@ -745,6 +788,182 @@ namespace GoogleMusic.Clients
 
         #endregion
 
+        #region AddToPlaylist
+
+        /// <summary>
+        /// Asynchronously adds songs to a Google Music playlist.
+        /// </summary>
+        /// <param name="title">Required. The name of the playlist.</param>
+        /// <param name="description">Optional. A description of the contents of the playlist.</param>
+        /// <returns>A task that represents the asynchronous request. The value of the <code>TResult</code> parameter contains a <code>Result</code> object with a dictionary mapping song IDs to playlist entry IDs.</returns>
+        public async Task<Result<IDictionary<Guid, Guid>>> AddToPlaylist(Playlist playlist, IEnumerable<Song> songs = null)
+        {
+            if (!this.IsLoggedIn)
+                return new Result<IDictionary<Guid, Guid>>(false, null, this, new ClientNotAuthorizedException(this));
+
+            // Step 1: Send request to server
+            var requestResult = await AddToPlaylist_Request(playlist, songs);
+            if (!requestResult.Success)
+                return new Result<IDictionary<Guid, Guid>>(requestResult.Success, null, this, requestResult.InnerException);
+
+            // Step 2: Parse result from server and create playlist
+            using (requestResult.Value)
+                return await Task.Run(() => AddToPlaylist_ParseResponse(requestResult.Value));
+        }
+
+        private void AddToPlaylist_BuildJson(Playlist playlist, IEnumerable<Song> songs, Stream stream)
+        {
+            using (var streamWriter = new StreamWriter(stream))
+            using (var jsonWriter = new JsonTextWriter(streamWriter))
+            {
+                jsonWriter.WriteStartArray(); // [
+
+                // ["sessionId",1]
+                jsonWriter.WriteStartArray();
+                jsonWriter.WriteValue(this.SessionId);
+                jsonWriter.WriteValue(1);
+                jsonWriter.WriteEndArray();
+
+                // ["Playlist-Guid",
+                jsonWriter.WriteStartArray();
+                jsonWriter.WriteValue(playlist.ID);
+
+                // [["Song-Guid", (int)songType], [...]]
+                jsonWriter.WriteStartArray();
+                if (songs != null)
+                {
+                    foreach (Song song in songs)
+                    {
+                        jsonWriter.WriteStartArray();
+                        jsonWriter.WriteValue(song.ID);
+                        jsonWriter.WriteValue(song.Type);
+                        jsonWriter.WriteEndArray();
+                    }
+                }
+                jsonWriter.WriteEndArray();
+
+                jsonWriter.WriteEndArray(); //]
+                jsonWriter.WriteEndArray(); //]
+            }
+        }
+
+        private async Task<Result<Stream>> AddToPlaylist_Request(Playlist playlist, IEnumerable<Song> songs)
+        {
+            string url = AppendXt("https://play.google.com/music/services/addtrackstoplaylist?format=jsarray");
+            Stream response;
+            try
+            {
+                using (var streamContent = new PushStreamContent(async (stream, httpContent, transportContext) => await Task.Run(() => AddToPlaylist_BuildJson(playlist, songs, stream)), "application/x-www-form-urlencoded"))
+                {
+                    response = await (await http.Client.PostAsync(url, streamContent)).Content.ReadAsStreamAsync();
+                }
+            }
+            catch (Exception e) { return new Result<Stream>(false, null, this, e); }
+
+            return new Result<Stream>(true, response, this);
+        }
+
+        private Result<IDictionary<Guid, Guid>> AddToPlaylist_ParseResponse(Stream response)
+        {
+            try
+            {
+                JArray deserialized;
+                using (StreamReader streamReader = new StreamReader(response))
+                using (var jsonTextReader = new JsonTextReader(streamReader))
+                {
+                    var jsonSerializer = new JsonSerializer();
+                    deserialized = jsonSerializer.Deserialize<JArray>(jsonTextReader);
+                }
+
+                deserialized = (JArray)deserialized[1][1];
+
+                Dictionary<Guid, Guid> dict = new Dictionary<Guid, Guid>(deserialized.Count);
+
+                foreach (JToken entry in deserialized)
+                {
+                    dict.Add(entry[0].ToObject<Guid>(), entry[2].ToObject<Guid>());
+                }
+
+                return new Result<IDictionary<Guid, Guid>>(true, dict, this);
+            }
+            catch (Exception e) { return new Result<IDictionary<Guid, Guid>>(false, null, this, e); }
+        }
+
+        #endregion
+
+        #region DeleteFromPlaylist
+
+        /// <summary>
+        /// Asynchronously deletes songs from a Google Music playlist.
+        /// </summary>
+        /// <param name="playlist">Required. The playlist to delete songs from.</param>
+        /// <param name="songs">Required. The enumerable collection of songs to delete. Note that every <code>Song</code> must have its playlist entry ID defined.</param>
+        /// <returns>Returns a <see cref="Result"/> containing an enumerable collection of GUIDs that were successfully deleted.</returns>
+        public async Task<Result<IEnumerable<Guid>>> DeleteFromPlaylist(Playlist playlist, IEnumerable<Song> songs)
+        {
+            if (!this.IsLoggedIn)
+                return new Result<IEnumerable<Guid>>(false, new Guid[0], this, new ClientNotAuthorizedException(this));
+            if (songs == null || songs.Count() < 1)
+                return new Result<IEnumerable<Guid>>(true, new Guid[0], this);
+
+            // Step 1: Send request (request will build JSON on the fly)
+            var requestResult = await DeleteFromPlaylist_Request(songs, playlist);
+            if (!requestResult.Success)
+                return new Result<IEnumerable<Guid>>(requestResult.Success, null, this, requestResult.InnerException);
+
+            // Step 2: Parse response of successfully deleted songs
+            return await Task.Run(() => ParseDeleteResponse(requestResult.Value, songs.Count()));
+        }
+
+        private void DeleteFromPlaylist_BuildJson(IEnumerable<Song> songs, Stream stream, Playlist playlist)
+        {
+            using (var streamWriter = new StreamWriter(stream))
+            using (var jsonWriter = new JsonTextWriter(streamWriter))
+            {
+                streamWriter.Write("json=");
+
+                jsonWriter.WriteStartObject(); // {
+
+                // songIds : ["Guid-here"]
+                jsonWriter.WritePropertyName("songIds");
+                jsonWriter.WriteStartArray();
+                foreach (var song in songs) jsonWriter.WriteValue(song.ID);
+                jsonWriter.WriteEndArray();
+
+                // "entryIds" : [""]
+                jsonWriter.WritePropertyName("entryIds");
+                jsonWriter.WriteStartArray();
+                foreach (var song in songs) jsonWriter.WriteValue(song.PlaylistEntryId);
+                jsonWriter.WriteEndArray();
+
+                jsonWriter.WritePropertyName("listId");
+                jsonWriter.WriteValue(playlist.ID.ToString());
+
+                jsonWriter.WritePropertyName("sessionId");
+                jsonWriter.WriteValue(this.SessionId);
+
+                jsonWriter.WriteEndObject();
+            }
+        }
+
+        private async Task<Result<Stream>> DeleteFromPlaylist_Request(IEnumerable<Song> songs, Playlist playlist)
+        {
+            string url = AppendXt("https://play.google.com/music/services/deletesong");
+            Stream response;
+            try
+            {
+                using (var streamContent = new PushStreamContent(async (stream, httpContent, transportContext) => await Task.Run(() => DeleteFromPlaylist_BuildJson(songs, stream, playlist)), "application/x-www-form-urlencoded"))
+                {
+                    response = await (await http.Client.PostAsync(url, streamContent)).Content.ReadAsStreamAsync();
+                }
+            }
+            catch (Exception e) { return new Result<Stream>(false, null, this, e); }
+
+            return new Result<Stream>(true, response, this);
+        }
+
+        #endregion
+
         #region Parsing
 
         private static Result ParseSongs(int arrayIndex, string javascriptData, Action<Song> addResult, object lockResults, IProgress<double> progress = null, double progressMin = 0.0, double progressMax = 100.0)
@@ -815,6 +1034,34 @@ namespace GoogleMusic.Clients
             finally { if (lockWasTaken) Monitor.Exit(lockResults); }
 
             return new Result(true, true, null);
+        }
+
+        private Result<IEnumerable<Guid>> ParseDeleteResponse(Stream response, int originalCount)
+        {
+            try
+            {
+                dynamic deserialized;
+                using (StreamReader streamReader = new StreamReader(response))
+                using (var jsonTextReader = new JsonTextReader(streamReader))
+                {
+                    var jsonSerializer = new JsonSerializer();
+                    deserialized = jsonSerializer.Deserialize(jsonTextReader);
+                }
+
+                string[] deleted_string = deserialized["deleteIds"].ToObject<string[]>();
+                Guid[] deleted = new Guid[deleted_string.Length];
+                for (int i = 0; i < deleted_string.Length; i++)
+                {
+                    int index = deleted_string[i].IndexOf('_');
+
+                    deleted[i] = Guid.Parse(index > -1 ? deleted_string[i].Substring(0, index) : deleted_string[i]);
+                }
+                    
+
+                
+                return new Result<IEnumerable<Guid>>(deleted.Length == originalCount, deleted, this);
+            }
+            catch (Exception e) { return new Result<IEnumerable<Guid>>(false, new Guid[0], this, e); }
         }
 
         #endregion

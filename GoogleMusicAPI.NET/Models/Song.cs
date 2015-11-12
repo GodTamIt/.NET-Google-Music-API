@@ -12,7 +12,7 @@ namespace GoogleMusic
     /// <summary>
     /// A class representing a song in the Google Music API.
     /// </summary>
-    public class Song
+    public class Song : ICloneable
     {
         #region Build
 
@@ -207,7 +207,7 @@ namespace GoogleMusic
 
         #endregion
 
-        #region Comaparisons
+        #region Comparisons
 
         public SongDifference CompareTo(Song update)
         {
@@ -329,6 +329,11 @@ namespace GoogleMusic
             if (obj is Song)
                 return this.ID.Equals(((Song)obj).ID);
             return false;
+        }
+
+        public object Clone()
+        {
+            return this.MemberwiseClone();
         }
 
         #endregion

@@ -28,359 +28,482 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.tbRefreshToken = new System.Windows.Forms.TextBox();
+            this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Library", 0, 2);
+            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("Playlists", 1, 3);
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GoogleTest));
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.lblCount = new System.Windows.Forms.ToolStripStatusLabel();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.spltTop = new System.Windows.Forms.SplitContainer();
             this.label4 = new System.Windows.Forms.Label();
-            this.button1 = new System.Windows.Forms.Button();
-            this.tbCode = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.btnUpload = new System.Windows.Forms.Button();
-            this.btnDeleteTrack = new System.Windows.Forms.Button();
-            this.btnAddTrack = new System.Windows.Forms.Button();
-            this.btnGetPlaylistSongs = new System.Windows.Forms.Button();
-            this.btnDeletePl = new System.Windows.Forms.Button();
-            this.btnSongURL = new System.Windows.Forms.Button();
-            this.btnGetPlaylists = new System.Windows.Forms.Button();
-            this.btnFetchSongs = new System.Windows.Forms.Button();
-            this.btnCreatePl = new System.Windows.Forms.Button();
-            this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
+            this.txtAccount = new System.Windows.Forms.TextBox();
             this.btnLogin = new System.Windows.Forms.Button();
-            this.tbPass = new System.Windows.Forms.TextBox();
-            this.tbEmail = new System.Windows.Forms.TextBox();
-            this.panel2 = new System.Windows.Forms.Panel();
-            this.lvSongs = new System.Windows.Forms.ListView();
-            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.panel3 = new System.Windows.Forms.Panel();
-            this.lbPlaylists = new System.Windows.Forms.ListBox();
-            this.panel1.SuspendLayout();
-            this.panel2.SuspendLayout();
-            this.panel3.SuspendLayout();
+            this.label2 = new System.Windows.Forms.Label();
+            this.txtAuth = new System.Windows.Forms.TextBox();
+            this.txtPass = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.spltMain = new System.Windows.Forms.SplitContainer();
+            this.tvSidebar = new System.Windows.Forms.TreeView();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+            this.dgvData = new System.Windows.Forms.DataGridView();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.btnAdd = new System.Windows.Forms.ToolStripButton();
+            this.btnRemove = new System.Windows.Forms.ToolStripButton();
+            this.btnUpload = new System.Windows.Forms.ToolStripButton();
+            this.btnAddTo = new System.Windows.Forms.ToolStripDropDownButton();
+            this.btnRefresh = new System.Windows.Forms.ToolStripButton();
+            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel3 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.statusStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.spltTop)).BeginInit();
+            this.spltTop.Panel1.SuspendLayout();
+            this.spltTop.Panel2.SuspendLayout();
+            this.spltTop.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.spltMain)).BeginInit();
+            this.spltMain.Panel1.SuspendLayout();
+            this.spltMain.Panel2.SuspendLayout();
+            this.spltMain.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvData)).BeginInit();
+            this.toolStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
-            // panel1
+            // statusStrip1
             // 
-            this.panel1.Controls.Add(this.tbRefreshToken);
-            this.panel1.Controls.Add(this.label4);
-            this.panel1.Controls.Add(this.button1);
-            this.panel1.Controls.Add(this.tbCode);
-            this.panel1.Controls.Add(this.label3);
-            this.panel1.Controls.Add(this.btnUpload);
-            this.panel1.Controls.Add(this.btnDeleteTrack);
-            this.panel1.Controls.Add(this.btnAddTrack);
-            this.panel1.Controls.Add(this.btnGetPlaylistSongs);
-            this.panel1.Controls.Add(this.btnDeletePl);
-            this.panel1.Controls.Add(this.btnSongURL);
-            this.panel1.Controls.Add(this.btnGetPlaylists);
-            this.panel1.Controls.Add(this.btnFetchSongs);
-            this.panel1.Controls.Add(this.btnCreatePl);
-            this.panel1.Controls.Add(this.label2);
-            this.panel1.Controls.Add(this.label1);
-            this.panel1.Controls.Add(this.btnLogin);
-            this.panel1.Controls.Add(this.tbPass);
-            this.panel1.Controls.Add(this.tbEmail);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panel1.Location = new System.Drawing.Point(0, 0);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(868, 125);
-            this.panel1.TabIndex = 0;
+            this.statusStrip1.BackColor = System.Drawing.Color.Transparent;
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripStatusLabel1,
+            this.lblStatus,
+            this.toolStripStatusLabel2,
+            this.toolStripStatusLabel3,
+            this.lblCount});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 552);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
+            this.statusStrip1.Size = new System.Drawing.Size(902, 29);
+            this.statusStrip1.SizingGrip = false;
+            this.statusStrip1.Stretch = false;
+            this.statusStrip1.TabIndex = 0;
+            this.statusStrip1.Text = "statusStrip1";
             // 
-            // tbRefreshToken
+            // lblStatus
             // 
-            this.tbRefreshToken.Location = new System.Drawing.Point(84, 90);
-            this.tbRefreshToken.Name = "tbRefreshToken";
-            this.tbRefreshToken.Size = new System.Drawing.Size(123, 20);
-            this.tbRefreshToken.TabIndex = 19;
+            this.lblStatus.Name = "lblStatus";
+            this.lblStatus.Size = new System.Drawing.Size(35, 24);
+            this.lblStatus.Text = "Idle...";
+            // 
+            // toolStripStatusLabel2
+            // 
+            this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
+            this.toolStripStatusLabel2.Size = new System.Drawing.Size(681, 24);
+            this.toolStripStatusLabel2.Spring = true;
+            // 
+            // lblCount
+            // 
+            this.lblCount.Name = "lblCount";
+            this.lblCount.Size = new System.Drawing.Size(13, 24);
+            this.lblCount.Text = "0";
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+            this.splitContainer1.IsSplitterFixed = true;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.spltTop);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.spltMain);
+            this.splitContainer1.Size = new System.Drawing.Size(902, 552);
+            this.splitContainer1.SplitterDistance = 98;
+            this.splitContainer1.TabIndex = 1;
+            // 
+            // spltTop
+            // 
+            this.spltTop.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.spltTop.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+            this.spltTop.IsSplitterFixed = true;
+            this.spltTop.Location = new System.Drawing.Point(0, 0);
+            this.spltTop.Name = "spltTop";
+            // 
+            // spltTop.Panel1
+            // 
+            this.spltTop.Panel1.Controls.Add(this.label4);
+            this.spltTop.Panel1.Controls.Add(this.pictureBox1);
+            this.spltTop.Panel1MinSize = 367;
+            // 
+            // spltTop.Panel2
+            // 
+            this.spltTop.Panel2.Controls.Add(this.label1);
+            this.spltTop.Panel2.Controls.Add(this.txtAccount);
+            this.spltTop.Panel2.Controls.Add(this.btnLogin);
+            this.spltTop.Panel2.Controls.Add(this.label2);
+            this.spltTop.Panel2.Controls.Add(this.txtAuth);
+            this.spltTop.Panel2.Controls.Add(this.txtPass);
+            this.spltTop.Panel2.Controls.Add(this.label3);
+            this.spltTop.Size = new System.Drawing.Size(902, 98);
+            this.spltTop.SplitterDistance = 367;
+            this.spltTop.TabIndex = 9;
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(13, 93);
+            this.label4.Font = new System.Drawing.Font("Segoe UI", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label4.Location = new System.Drawing.Point(89, 27);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(65, 13);
-            this.label4.TabIndex = 18;
-            this.label4.Text = "Refresh tkn:";
-            // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(213, 64);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(104, 23);
-            this.button1.TabIndex = 17;
-            this.button1.Text = "Get refresh token";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
-            // tbCode
-            // 
-            this.tbCode.Location = new System.Drawing.Point(84, 64);
-            this.tbCode.Name = "tbCode";
-            this.tbCode.Size = new System.Drawing.Size(123, 20);
-            this.tbCode.TabIndex = 16;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(16, 69);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(62, 13);
-            this.label3.TabIndex = 15;
-            this.label3.Text = "Auth. code:";
-            // 
-            // btnUpload
-            // 
-            this.btnUpload.Location = new System.Drawing.Point(673, 64);
-            this.btnUpload.Name = "btnUpload";
-            this.btnUpload.Size = new System.Drawing.Size(179, 23);
-            this.btnUpload.TabIndex = 14;
-            this.btnUpload.Text = "Upload track";
-            this.btnUpload.UseVisualStyleBackColor = true;
-            this.btnUpload.Click += new System.EventHandler(this.btnUpload_Click);
-            // 
-            // btnDeleteTrack
-            // 
-            this.btnDeleteTrack.Location = new System.Drawing.Point(673, 33);
-            this.btnDeleteTrack.Name = "btnDeleteTrack";
-            this.btnDeleteTrack.Size = new System.Drawing.Size(179, 23);
-            this.btnDeleteTrack.TabIndex = 13;
-            this.btnDeleteTrack.Text = "Delete selected track";
-            this.btnDeleteTrack.UseVisualStyleBackColor = true;
-            this.btnDeleteTrack.Click += new System.EventHandler(this.btnDeleteTrack_Click);
-            // 
-            // btnAddTrack
-            // 
-            this.btnAddTrack.Location = new System.Drawing.Point(673, 3);
-            this.btnAddTrack.Name = "btnAddTrack";
-            this.btnAddTrack.Size = new System.Drawing.Size(179, 23);
-            this.btnAddTrack.TabIndex = 12;
-            this.btnAddTrack.Text = "Add selected track to playlist";
-            this.btnAddTrack.UseVisualStyleBackColor = true;
-            this.btnAddTrack.Click += new System.EventHandler(this.btnAddTrack_Click);
-            // 
-            // btnGetPlaylistSongs
-            // 
-            this.btnGetPlaylistSongs.Location = new System.Drawing.Point(510, 64);
-            this.btnGetPlaylistSongs.Name = "btnGetPlaylistSongs";
-            this.btnGetPlaylistSongs.Size = new System.Drawing.Size(138, 23);
-            this.btnGetPlaylistSongs.TabIndex = 11;
-            this.btnGetPlaylistSongs.Text = "Get playlist songs";
-            this.btnGetPlaylistSongs.UseVisualStyleBackColor = true;
-            this.btnGetPlaylistSongs.Click += new System.EventHandler(this.btnGetPlaylistSongs_Click);
-            // 
-            // btnDeletePl
-            // 
-            this.btnDeletePl.Location = new System.Drawing.Point(510, 33);
-            this.btnDeletePl.Name = "btnDeletePl";
-            this.btnDeletePl.Size = new System.Drawing.Size(138, 23);
-            this.btnDeletePl.TabIndex = 9;
-            this.btnDeletePl.Text = "Delete selected playlist";
-            this.btnDeletePl.UseVisualStyleBackColor = true;
-            this.btnDeletePl.Click += new System.EventHandler(this.btnDeletePl_Click);
-            // 
-            // btnSongURL
-            // 
-            this.btnSongURL.Location = new System.Drawing.Point(510, 3);
-            this.btnSongURL.Name = "btnSongURL";
-            this.btnSongURL.Size = new System.Drawing.Size(138, 23);
-            this.btnSongURL.TabIndex = 8;
-            this.btnSongURL.Text = "Download Selected Song";
-            this.btnSongURL.UseVisualStyleBackColor = true;
-            this.btnSongURL.Click += new System.EventHandler(this.btnSongURL_Click);
-            // 
-            // btnGetPlaylists
-            // 
-            this.btnGetPlaylists.Location = new System.Drawing.Point(349, 33);
-            this.btnGetPlaylists.Name = "btnGetPlaylists";
-            this.btnGetPlaylists.Size = new System.Drawing.Size(132, 23);
-            this.btnGetPlaylists.TabIndex = 7;
-            this.btnGetPlaylists.Text = "Fetch Playlists";
-            this.btnGetPlaylists.UseVisualStyleBackColor = true;
-            this.btnGetPlaylists.Click += new System.EventHandler(this.btnGetPlaylists_Click);
-            // 
-            // btnFetchSongs
-            // 
-            this.btnFetchSongs.Location = new System.Drawing.Point(349, 3);
-            this.btnFetchSongs.Name = "btnFetchSongs";
-            this.btnFetchSongs.Size = new System.Drawing.Size(132, 23);
-            this.btnFetchSongs.TabIndex = 6;
-            this.btnFetchSongs.Text = "Fetch Tracks";
-            this.btnFetchSongs.UseVisualStyleBackColor = true;
-            this.btnFetchSongs.Click += new System.EventHandler(this.btnFetchSongs_Click);
-            // 
-            // btnCreatePl
-            // 
-            this.btnCreatePl.Location = new System.Drawing.Point(349, 64);
-            this.btnCreatePl.Name = "btnCreatePl";
-            this.btnCreatePl.Size = new System.Drawing.Size(132, 23);
-            this.btnCreatePl.TabIndex = 5;
-            this.btnCreatePl.Text = "Create playlist \"Testing\"";
-            this.btnCreatePl.UseVisualStyleBackColor = true;
-            this.btnCreatePl.Click += new System.EventHandler(this.btnCreatePl_Click);
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(22, 41);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(56, 13);
-            this.label2.TabIndex = 4;
-            this.label2.Text = "Password:";
+            this.label4.Size = new System.Drawing.Size(274, 45);
+            this.label4.TabIndex = 8;
+            this.label4.Text = "Google Music API";
             // 
             // label1
             // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(43, 15);
+            this.label1.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(48, 13);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(35, 13);
-            this.label1.TabIndex = 3;
-            this.label1.Text = "Email:";
+            this.label1.Size = new System.Drawing.Size(94, 13);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "Google Account:";
+            // 
+            // txtAccount
+            // 
+            this.txtAccount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtAccount.Location = new System.Drawing.Point(148, 10);
+            this.txtAccount.Name = "txtAccount";
+            this.txtAccount.Size = new System.Drawing.Size(176, 22);
+            this.txtAccount.TabIndex = 1;
+            this.txtAccount.TextChanged += new System.EventHandler(this.btnLogin_Enabler);
             // 
             // btnLogin
             // 
-            this.btnLogin.Location = new System.Drawing.Point(213, 88);
+            this.btnLogin.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnLogin.Enabled = false;
+            this.btnLogin.Location = new System.Drawing.Point(337, 38);
             this.btnLogin.Name = "btnLogin";
-            this.btnLogin.Size = new System.Drawing.Size(104, 23);
-            this.btnLogin.TabIndex = 2;
+            this.btnLogin.Size = new System.Drawing.Size(146, 23);
+            this.btnLogin.TabIndex = 6;
             this.btnLogin.Text = "Login";
             this.btnLogin.UseVisualStyleBackColor = true;
             this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
             // 
-            // tbPass
+            // label2
             // 
-            this.tbPass.Location = new System.Drawing.Point(84, 38);
-            this.tbPass.Name = "tbPass";
-            this.tbPass.Size = new System.Drawing.Size(233, 20);
-            this.tbPass.TabIndex = 1;
-            this.tbPass.UseSystemPasswordChar = true;
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.Location = new System.Drawing.Point(82, 41);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(60, 13);
+            this.label2.TabIndex = 2;
+            this.label2.Text = "Password:";
             // 
-            // tbEmail
+            // txtAuth
             // 
-            this.tbEmail.Location = new System.Drawing.Point(84, 12);
-            this.tbEmail.Name = "tbEmail";
-            this.tbEmail.Size = new System.Drawing.Size(233, 20);
-            this.tbEmail.TabIndex = 0;
+            this.txtAuth.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtAuth.Enabled = false;
+            this.txtAuth.Location = new System.Drawing.Point(148, 66);
+            this.txtAuth.Name = "txtAuth";
+            this.txtAuth.Size = new System.Drawing.Size(176, 22);
+            this.txtAuth.TabIndex = 5;
+            this.txtAuth.UseSystemPasswordChar = true;
+            this.txtAuth.TextChanged += new System.EventHandler(this.btnLogin_Enabler);
             // 
-            // panel2
+            // txtPass
             // 
-            this.panel2.Controls.Add(this.lvSongs);
-            this.panel2.Controls.Add(this.panel3);
-            this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel2.Location = new System.Drawing.Point(0, 125);
-            this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(868, 456);
-            this.panel2.TabIndex = 1;
+            this.txtPass.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtPass.Location = new System.Drawing.Point(148, 38);
+            this.txtPass.Name = "txtPass";
+            this.txtPass.Size = new System.Drawing.Size(176, 22);
+            this.txtPass.TabIndex = 3;
+            this.txtPass.UseSystemPasswordChar = true;
+            this.txtPass.TextChanged += new System.EventHandler(this.btnLogin_Enabler);
             // 
-            // lvSongs
+            // label3
             // 
-            this.lvSongs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1,
-            this.columnHeader2,
-            this.columnHeader3,
-            this.columnHeader4,
-            this.columnHeader5});
-            this.lvSongs.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lvSongs.Location = new System.Drawing.Point(121, 0);
-            this.lvSongs.Name = "lvSongs";
-            this.lvSongs.Size = new System.Drawing.Size(747, 456);
-            this.lvSongs.TabIndex = 2;
-            this.lvSongs.UseCompatibleStateImageBehavior = false;
-            this.lvSongs.View = System.Windows.Forms.View.Details;
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label3.Location = new System.Drawing.Point(72, 69);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(70, 13);
+            this.label3.TabIndex = 4;
+            this.label3.Text = "Auth Token:";
             // 
-            // columnHeader1
+            // spltMain
             // 
-            this.columnHeader1.Text = "ID";
+            this.spltMain.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.spltMain.Enabled = false;
+            this.spltMain.Location = new System.Drawing.Point(0, 0);
+            this.spltMain.Name = "spltMain";
             // 
-            // columnHeader2
+            // spltMain.Panel1
             // 
-            this.columnHeader2.Text = "Title";
-            this.columnHeader2.Width = 96;
+            this.spltMain.Panel1.Controls.Add(this.tvSidebar);
             // 
-            // columnHeader3
+            // spltMain.Panel2
             // 
-            this.columnHeader3.Text = "Artist";
-            this.columnHeader3.Width = 114;
+            this.spltMain.Panel2.Controls.Add(this.dgvData);
+            this.spltMain.Panel2.Controls.Add(this.toolStrip1);
+            this.spltMain.Size = new System.Drawing.Size(902, 450);
+            this.spltMain.SplitterDistance = 190;
+            this.spltMain.TabIndex = 0;
             // 
-            // columnHeader4
+            // tvSidebar
             // 
-            this.columnHeader4.Text = "Album";
-            this.columnHeader4.Width = 142;
+            this.tvSidebar.AllowDrop = true;
+            this.tvSidebar.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.tvSidebar.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tvSidebar.HideSelection = false;
+            this.tvSidebar.ImageIndex = 0;
+            this.tvSidebar.ImageList = this.imageList1;
+            this.tvSidebar.Location = new System.Drawing.Point(0, 0);
+            this.tvSidebar.Name = "tvSidebar";
+            treeNode3.ImageIndex = 0;
+            treeNode3.Name = "tvnLibrary";
+            treeNode3.SelectedImageIndex = 2;
+            treeNode3.Text = "Library";
+            treeNode4.ImageIndex = 1;
+            treeNode4.Name = "tvnPlaylists";
+            treeNode4.SelectedImageIndex = 3;
+            treeNode4.Text = "Playlists";
+            this.tvSidebar.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
+            treeNode3,
+            treeNode4});
+            this.tvSidebar.SelectedImageIndex = 0;
+            this.tvSidebar.ShowRootLines = false;
+            this.tvSidebar.Size = new System.Drawing.Size(190, 450);
+            this.tvSidebar.TabIndex = 0;
+            this.tvSidebar.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.tvSidebar_AfterSelect);
+            this.tvSidebar.DragDrop += new System.Windows.Forms.DragEventHandler(this.tvSidebar_DragDrop);
+            this.tvSidebar.DragOver += new System.Windows.Forms.DragEventHandler(this.tvSidebar_DragOver);
+            this.tvSidebar.DragLeave += new System.EventHandler(this.tvSidebar_DragLeave);
             // 
-            // columnHeader5
+            // imageList1
             // 
-            this.columnHeader5.Text = "gid";
-            this.columnHeader5.Width = 318;
+            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
+            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
+            this.imageList1.Images.SetKeyName(0, "Music.png");
+            this.imageList1.Images.SetKeyName(1, "Playlist.png");
+            this.imageList1.Images.SetKeyName(2, "MusicSelected.png");
+            this.imageList1.Images.SetKeyName(3, "PlaylistSelected.png");
             // 
-            // panel3
+            // dgvData
             // 
-            this.panel3.Controls.Add(this.lbPlaylists);
-            this.panel3.Dock = System.Windows.Forms.DockStyle.Left;
-            this.panel3.Location = new System.Drawing.Point(0, 0);
-            this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(121, 456);
-            this.panel3.TabIndex = 0;
+            this.dgvData.AllowUserToAddRows = false;
+            this.dgvData.AllowUserToDeleteRows = false;
+            this.dgvData.AllowUserToResizeRows = false;
+            this.dgvData.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgvData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvData.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvData.Location = new System.Drawing.Point(0, 31);
+            this.dgvData.Name = "dgvData";
+            this.dgvData.ReadOnly = true;
+            this.dgvData.RowHeadersVisible = false;
+            this.dgvData.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvData.Size = new System.Drawing.Size(708, 419);
+            this.dgvData.TabIndex = 0;
+            this.dgvData.UserDeletingRow += new System.Windows.Forms.DataGridViewRowCancelEventHandler(this.dgvData_UserDeletingRow);
+            this.dgvData.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dgvData_MouseDown);
+            this.dgvData.MouseMove += new System.Windows.Forms.MouseEventHandler(this.dgvData_MouseMove);
             // 
-            // lbPlaylists
+            // toolStrip1
             // 
-            this.lbPlaylists.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lbPlaylists.FormattingEnabled = true;
-            this.lbPlaylists.Location = new System.Drawing.Point(0, 0);
-            this.lbPlaylists.Name = "lbPlaylists";
-            this.lbPlaylists.Size = new System.Drawing.Size(121, 456);
-            this.lbPlaylists.TabIndex = 4;
+            this.toolStrip1.BackColor = System.Drawing.Color.Transparent;
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnAdd,
+            this.btnRemove,
+            this.btnUpload,
+            this.toolStripSeparator1,
+            this.btnAddTo,
+            this.toolStripSeparator2,
+            this.btnRefresh});
+            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
+            this.toolStrip1.Size = new System.Drawing.Size(708, 31);
+            this.toolStrip1.TabIndex = 2;
+            this.toolStrip1.Text = "toolStrip1";
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 31);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 31);
+            // 
+            // pictureBox1
+            // 
+            this.pictureBox1.BackColor = System.Drawing.Color.Transparent;
+            this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
+            this.pictureBox1.Location = new System.Drawing.Point(3, 9);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(80, 80);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox1.TabIndex = 7;
+            this.pictureBox1.TabStop = false;
+            // 
+            // btnAdd
+            // 
+            this.btnAdd.Enabled = false;
+            this.btnAdd.Image = ((System.Drawing.Image)(resources.GetObject("btnAdd.Image")));
+            this.btnAdd.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.btnAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnAdd.Name = "btnAdd";
+            this.btnAdd.Size = new System.Drawing.Size(57, 28);
+            this.btnAdd.Text = "Add";
+            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            // 
+            // btnRemove
+            // 
+            this.btnRemove.Image = ((System.Drawing.Image)(resources.GetObject("btnRemove.Image")));
+            this.btnRemove.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.btnRemove.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnRemove.Name = "btnRemove";
+            this.btnRemove.Size = new System.Drawing.Size(78, 28);
+            this.btnRemove.Text = "Remove";
+            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
+            // 
+            // btnUpload
+            // 
+            this.btnUpload.Image = ((System.Drawing.Image)(resources.GetObject("btnUpload.Image")));
+            this.btnUpload.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.btnUpload.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnUpload.Name = "btnUpload";
+            this.btnUpload.Size = new System.Drawing.Size(73, 28);
+            this.btnUpload.Text = "Upload";
+            // 
+            // btnAddTo
+            // 
+            this.btnAddTo.Image = ((System.Drawing.Image)(resources.GetObject("btnAddTo.Image")));
+            this.btnAddTo.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.btnAddTo.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnAddTo.Name = "btnAddTo";
+            this.btnAddTo.Size = new System.Drawing.Size(89, 28);
+            this.btnAddTo.Text = "Add to...";
+            // 
+            // btnRefresh
+            // 
+            this.btnRefresh.Image = ((System.Drawing.Image)(resources.GetObject("btnRefresh.Image")));
+            this.btnRefresh.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.btnRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnRefresh.Name = "btnRefresh";
+            this.btnRefresh.Size = new System.Drawing.Size(74, 28);
+            this.btnRefresh.Text = "Refresh";
+            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+            // 
+            // toolStripStatusLabel1
+            // 
+            this.toolStripStatusLabel1.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.toolStripStatusLabel1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripStatusLabel1.Image")));
+            this.toolStripStatusLabel1.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(69, 24);
+            this.toolStripStatusLabel1.Text = "Status:";
+            // 
+            // toolStripStatusLabel3
+            // 
+            this.toolStripStatusLabel3.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.toolStripStatusLabel3.Image = ((System.Drawing.Image)(resources.GetObject("toolStripStatusLabel3.Image")));
+            this.toolStripStatusLabel3.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.toolStripStatusLabel3.Name = "toolStripStatusLabel3";
+            this.toolStripStatusLabel3.Size = new System.Drawing.Size(89, 24);
+            this.toolStripStatusLabel3.Text = "List Count:";
             // 
             // GoogleTest
             // 
             this.AcceptButton = this.btnLogin;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(868, 581);
-            this.Controls.Add(this.panel2);
-            this.Controls.Add(this.panel1);
+            this.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.ClientSize = new System.Drawing.Size(902, 581);
+            this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.statusStrip1);
+            this.DoubleBuffered = true;
+            this.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MinimumSize = new System.Drawing.Size(875, 39);
             this.Name = "GoogleTest";
-            this.Text = "GoogleMusicAPI.NET Test";
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
-            this.panel2.ResumeLayout(false);
-            this.panel3.ResumeLayout(false);
+            this.Text = "Google Music API";
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
+            this.spltTop.Panel1.ResumeLayout(false);
+            this.spltTop.Panel1.PerformLayout();
+            this.spltTop.Panel2.ResumeLayout(false);
+            this.spltTop.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.spltTop)).EndInit();
+            this.spltTop.ResumeLayout(false);
+            this.spltMain.Panel1.ResumeLayout(false);
+            this.spltMain.Panel2.ResumeLayout(false);
+            this.spltMain.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.spltMain)).EndInit();
+            this.spltMain.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvData)).EndInit();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button btnLogin;
-        private System.Windows.Forms.TextBox tbPass;
-        private System.Windows.Forms.TextBox tbEmail;
-        private System.Windows.Forms.Panel panel2;
-        private System.Windows.Forms.Button btnCreatePl;
-        private System.Windows.Forms.Button btnFetchSongs;
-        private System.Windows.Forms.Button btnGetPlaylists;
-        private System.Windows.Forms.Button btnSongURL;
-        private System.Windows.Forms.ListView lvSongs;
-        private System.Windows.Forms.ColumnHeader columnHeader1;
-        private System.Windows.Forms.ColumnHeader columnHeader2;
-        private System.Windows.Forms.ColumnHeader columnHeader3;
-        private System.Windows.Forms.ColumnHeader columnHeader4;
-        private System.Windows.Forms.ColumnHeader columnHeader5;
-        private System.Windows.Forms.Panel panel3;
-        private System.Windows.Forms.ListBox lbPlaylists;
-        private System.Windows.Forms.Button btnDeletePl;
-        private System.Windows.Forms.Button btnGetPlaylistSongs;
-        private System.Windows.Forms.Button btnUpload;
-        private System.Windows.Forms.Button btnDeleteTrack;
-        private System.Windows.Forms.Button btnAddTrack;
-        private System.Windows.Forms.TextBox tbCode;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox tbRefreshToken;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.ToolStripStatusLabel lblStatus;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.SplitContainer spltMain;
+        private System.Windows.Forms.TreeView tvSidebar;
+        private System.Windows.Forms.ImageList imageList1;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.SplitContainer spltTop;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox txtAccount;
+        private System.Windows.Forms.Button btnLogin;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox txtAuth;
+        private System.Windows.Forms.TextBox txtPass;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.DataGridView dgvData;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel2;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel3;
+        private System.Windows.Forms.ToolStripStatusLabel lblCount;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripButton btnAdd;
+        private System.Windows.Forms.ToolStripButton btnUpload;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripButton btnRefresh;
+        private System.Windows.Forms.ToolStripButton btnRemove;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripDropDownButton btnAddTo;
+
 
     }
 }
