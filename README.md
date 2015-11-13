@@ -1,4 +1,4 @@
-C-Sharp-Google-Music-API
+Google Music API (.NET Framework)
 ========================
 
 An unofficial robust and full implementation of Google's Play Music API for the .NET Framework.
