@@ -25,9 +25,8 @@ namespace GoogleMusic.Clients
         private const string ANDROID_URL = "https://android.clients.google.com/upsj/";
         private const string SJ_URL = "https://www.googleapis.com/sj/v1.1/";
         private const string PROTO_CONTENT_TYPE = "application/x-google-protobuf";
-        private const Random RANDOM = new Random();
+        private Random RANDOM = new Random();
 
-        private Http_Old http_old;
         private Http http;
         #endregion
 
@@ -41,10 +40,8 @@ namespace GoogleMusic.Clients
         /// <exception cref="System.ArgumentException">Thrown when clientId is an empty string or null.</exception>
         public MusicManagerClient(string clientId, string clientSecret)
         {
-            http_old = new Http_Old();
             http = new Http();
             http.UserAgent = USER_AGENT;
-            http_old.UserAgent = USER_AGENT;
 
             // Assign property to get error handling
             ClientId = clientId;
@@ -207,7 +204,7 @@ namespace GoogleMusic.Clients
 
         public async Task<Result<string>> AuthorizeUploader(string uploaderId, string uploaderReadableName)
         {
-            
+            return null;
         }
 
         #endregion

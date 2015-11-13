@@ -104,8 +104,8 @@ namespace GoogleMusic
             Logout();
             Task<Result<string>> webLogin = this.WebClient.Login(email, password);
 
-            Result<string> musicManagerRefreshToken = await this.MusicManager.GetRefreshTokenAsync(authorizationCode);
-            Result<string> musicManagerAccessToken = await this.MusicManager.RenewAccessTokenAsync();
+            //Result<string> musicManagerRefreshToken = await this.MusicManager.GetRefreshTokenAsync(authorizationCode);
+            //Result<string> musicManagerAccessToken = await this.MusicManager.RenewAccessTokenAsync();
 
             Result<string> webResult = await webLogin;
 
